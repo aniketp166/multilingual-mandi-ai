@@ -54,6 +54,13 @@ export default async function handler(
       });
     }
 
+    if (buyer_message.length > 5000) {
+      return res.status(400).json({
+        success: false,
+        error: 'Message too long (max 5000 characters)'
+      });
+    }
+
     const apiKey = process.env.GEMINI_API_KEY;
 
     if (!apiKey) {

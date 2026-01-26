@@ -46,6 +46,27 @@ export default async function handler(
       });
     }
 
+    if (product_name.length > 200) {
+      return res.status(400).json({
+        success: false,
+        error: 'Product name too long (max 200 characters)'
+      });
+    }
+
+    if (quantity < 0 || quantity > 100000) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid quantity (must be between 0 and 100000)'
+      });
+    }
+
+    if (location && location.length > 100) {
+      return res.status(400).json({
+        success: false,
+        error: 'Location too long (max 100 characters)'
+      });
+    }
+
     const apiKey = process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
@@ -68,20 +89,20 @@ export default async function handler(
     const client = new GoogleGenAI({ apiKey });
 
     const responseLanguage = language || 'en';
-    const languageInstruction = responseLanguage !== 'en' 
-      ? `Provide the reasoning in ${responseLanguage} language.` 
-      : '';
 
-    const prompt = `As a market analyst for Indian agricultural products, provide pricing recommendations:
+    const prompt = `As a market analyst for Indian agricultural products, provide pricing recommendations using current market data:
 
 Product: ${product_name}
 Quantity: ${quantity} kg
 Current Price: ₹${current_price || 'Not specified'}
 Location: ${location || 'India'}
 
+Search for current market prices and trends for this product. Use real-time data to provide accurate recommendations.
+
 Requirements:
 1. reasoning must be max 2 VERY SHORT sentences in ${responseLanguage}.
 2. market_trend must be rising|falling|stable.
+3. Use current market data from search results.
 
 Format:
 {
@@ -101,6 +122,7 @@ Format:
           temperature: 0.4,
           maxOutputTokens: 2048,
           responseMimeType: 'application/json',
+          tools: [{ googleSearch: {} }]
         }
       });
     } catch (error) {
