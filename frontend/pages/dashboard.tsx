@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Layout from '../src/components/Layout';
 import ProductCard from '../src/components/ProductCard';
 import AddProductModal from '../src/components/AddProductModal';
+import PriceSuggestionModal from '../src/components/PriceSuggestionModal';
 import { storage } from '../src/utils/storage';
 import { Product, ProductInput } from '../src/types';
 import { config } from '../src/config';
@@ -10,6 +11,8 @@ const Dashboard: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isPriceSuggestionModalOpen, setIsPriceSuggestionModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   // Load products from storage on component mount
   useEffect(() => {
@@ -71,11 +74,24 @@ const Dashboard: React.FC = () => {
     console.log('Edit product:', product);
   };
 
-  // Handle price suggestion (placeholder)
+  // Handle price suggestion
   const handlePriceSuggest = (product: Product) => {
-    // TODO: Call price suggestion API
-    console.log('Get price suggestion for:', product);
-    alert(`Price suggestion for ${product.name} - Coming soon!`);
+    setSelectedProduct(product);
+    setIsPriceSuggestionModalOpen(true);
+  };
+
+  // Handle price acceptance from modal
+  const handleAcceptPrice = (newPrice: number) => {
+    if (selectedProduct) {
+      const updatedProduct = { ...selectedProduct, price: newPrice, updated_at: new Date().toISOString() };
+      const success = storage.updateProductByObject(updatedProduct);
+      
+      if (success) {
+        setProducts(prev => prev.map(p => p.id === selectedProduct.id ? updatedProduct : p));
+      }
+    }
+    setIsPriceSuggestionModalOpen(false);
+    setSelectedProduct(null);
   };
 
   // Get storage info
@@ -372,6 +388,19 @@ const Dashboard: React.FC = () => {
           onClose={() => setIsAddModalOpen(false)}
           onSubmit={handleAddProduct}
         />
+
+        {/* Price Suggestion Modal */}
+        {selectedProduct && (
+          <PriceSuggestionModal
+            isOpen={isPriceSuggestionModalOpen}
+            onClose={() => {
+              setIsPriceSuggestionModalOpen(false);
+              setSelectedProduct(null);
+            }}
+            product={selectedProduct}
+            onAcceptPrice={handleAcceptPrice}
+          />
+        )}
       </div>
     </Layout>
   );

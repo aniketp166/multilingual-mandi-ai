@@ -63,7 +63,7 @@ const getEnvBool = (key: string, fallback: boolean = false): boolean => {
 const getEnvNumber = (key: string, fallback: number = 0): number => {
   const value = process.env[key];
   if (value === undefined) return fallback;
-  const parsed = parseInt(value, 10);
+  const parsed = parseFloat(value);
   return isNaN(parsed) ? fallback : parsed;
 };
 

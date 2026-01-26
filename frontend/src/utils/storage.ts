@@ -170,6 +170,20 @@ export class StorageManager {
     return updatedProduct;
   }
 
+  public updateProductByObject(product: Product): boolean {
+    const productIndex = this.data.products.findIndex(p => p.id === product.id);
+    if (productIndex === -1) {
+      return false;
+    }
+
+    this.data.products[productIndex] = {
+      ...product,
+      updated_at: new Date().toISOString(),
+    };
+    this.saveToStorage();
+    return true;
+  }
+
   public deleteProduct(id: string): boolean {
     const initialLength = this.data.products.length;
     this.data.products = this.data.products.filter(p => p.id !== id);
