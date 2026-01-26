@@ -74,6 +74,7 @@ export interface PriceSuggestionResponse {
   recommended_price: number;
   reasoning: string;
   market_trend: "rising" | "falling" | "stable";
+  confidence: number;
 }
 
 export interface NegotiationRequest {

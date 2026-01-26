@@ -417,10 +417,250 @@ body {
   }
 }
 
-/* Print styles */
+/* Custom animations for enhanced UI */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes bounce {
+  0%, 20%, 53%, 80%, 100% {
+    transform: translate3d(0,0,0);
+  }
+  40%, 43% {
+    transform: translate3d(0, -8px, 0);
+  }
+  70% {
+    transform: translate3d(0, -4px, 0);
+  }
+  90% {
+    transform: translate3d(0, -2px, 0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+/* Animation utility classes */
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.4s ease-out;
+}
+
+.animate-slide-down {
+  animation: slideDown 0.4s ease-out;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.3s ease-out;
+}
+
+.animate-bounce-gentle {
+  animation: bounce 1s ease-in-out;
+}
+
+.animate-pulse-slow {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Enhanced card hover effects */
+.card-hover-lift {
+  @apply transition-all duration-300 ease-out;
+}
+
+.card-hover-lift:hover {
+  @apply -translate-y-2 shadow-xl;
+}
+
+/* Gradient backgrounds */
+.bg-gradient-primary {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+}
+
+.bg-gradient-secondary {
+  background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-secondary-dark) 100%);
+}
+
+.bg-gradient-success {
+  background: linear-gradient(135deg, var(--color-success) 0%, var(--color-success-dark) 100%);
+}
+
+.bg-gradient-hero {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 50%, var(--color-saffron) 100%);
+}
+
+/* Glass morphism effect */
+.glass {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Loading skeleton */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Enhanced button styles */
+.btn-gradient {
+  @apply bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5;
+}
+
+.btn-glass {
+  @apply glass text-white font-semibold hover:bg-white/20 transition-all duration-200;
+}
+
+/* Enhanced input styles */
+.input-enhanced {
+  @apply input-base focus:ring-4 focus:ring-emerald-100 focus:border-emerald-500 transition-all duration-200;
+}
+
+.input-enhanced:focus {
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+}
+
+/* Status indicators */
+.status-online {
+  @apply w-3 h-3 bg-green-500 rounded-full animate-pulse;
+}
+
+.status-offline {
+  @apply w-3 h-3 bg-gray-400 rounded-full;
+}
+
+/* Enhanced modal styles */
+.modal-enhanced {
+  @apply bg-white rounded-2xl shadow-2xl border border-gray-100 animate-scale-in;
+}
+
+/* Product card enhancements */
+.product-card-enhanced {
+  @apply bg-white rounded-2xl shadow-lg border border-gray-100 hover:border-emerald-200 transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl overflow-hidden;
+}
+
+.product-card-enhanced {
+  position: relative;
+}
+
+.product-card-enhanced::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  transition: left 0.5s;
+}
+
+.product-card-enhanced:hover::before {
+  left: 100%;
+}
+
+/* Floating elements */
+.float-animation {
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Enhanced typography */
+.text-gradient {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-saffron));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Responsive enhancements */
+@media (max-width: 640px) {
+  .mobile-optimized {
+    @apply px-4 py-2 text-sm;
+  }
+}
+
+/* Touch-friendly elements */
+.touch-target {
+  @apply min-h-[44px] min-w-[44px];
+}
+
+/* Enhanced focus styles for accessibility */
+.focus-enhanced:focus {
+  @apply outline-none ring-4 ring-emerald-500/50 ring-offset-2;
+}
+
+/* Print optimizations */
 @media print {
-  .no-print {
-    display: none !important;
+  .print-hidden {
+    @apply hidden;
+  }
+  
+  .print-visible {
+    @apply block;
   }
 }
 

@@ -35,6 +35,11 @@ export class StorageManager {
   // Load data from localStorage with error handling
   private loadFromStorage(): LocalStorageData {
     try {
+      // Check if we're in a browser environment
+      if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
+        return getDefaultData();
+      }
+
       const stored = localStorage.getItem(STORAGE_KEY);
       if (!stored) {
         return getDefaultData();
@@ -58,6 +63,11 @@ export class StorageManager {
   // Save data to localStorage with quota handling
   private saveToStorage(): boolean {
     try {
+      // Check if we're in a browser environment
+      if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
+        return false;
+      }
+
       const dataString = JSON.stringify(this.data);
       
       // Check size before saving
