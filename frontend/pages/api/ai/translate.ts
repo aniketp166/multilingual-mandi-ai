@@ -92,8 +92,16 @@ export default async function handler(
       });
     }
 
-    // Extract text - it's a property, not a method
-    const translatedText = result.text || '';
+    // Extract text - handle both string and object responses
+    let translatedText = '';
+    if (typeof result.text === 'string') {
+      translatedText = result.text;
+    } else if (result.text && typeof result.text === 'object') {
+      // Handle case where text is an object (e.g., {response: "...", tone: "..."})
+      translatedText = (result.text as any).response || (result.text as any).text || JSON.stringify(result.text);
+    } else {
+      translatedText = String(result.text || '');
+    }
 
     const translationResponse: TranslationResponse = {
       translated_text: translatedText.trim(),

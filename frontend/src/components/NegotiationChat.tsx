@@ -220,9 +220,18 @@ export default function NegotiationChat({
                           }`}
                       >
                         <p className="text-sm sm:text-base leading-relaxed break-words">
-                          {displayingOriginal && message.translated_text
-                            ? message.text
-                            : message.translated_text || message.text}
+                          {(() => {
+                            const textToDisplay = displayingOriginal && message.translated_text
+                              ? message.text
+                              : message.translated_text || message.text;
+                            
+                            // Ensure we're rendering a string, not an object
+                            if (typeof textToDisplay === 'object') {
+                              console.error('Message text is an object:', textToDisplay);
+                              return JSON.stringify(textToDisplay);
+                            }
+                            return textToDisplay;
+                          })()}
                         </p>
                       </div>
                       <div className={`flex items-center gap-3 mt-1.5 px-1 ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>

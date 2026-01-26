@@ -88,7 +88,16 @@ export default function BuyerPage() {
         console.log('Translation API response data:', data);
         
         if (data.success && data.data) {
-          newMessage.translated_text = data.data.translated_text;
+          // Ensure translated_text is a string, not an object
+          const translatedText = data.data.translated_text;
+          if (typeof translatedText === 'string') {
+            newMessage.translated_text = translatedText;
+          } else if (translatedText && typeof translatedText === 'object') {
+            // Handle case where API returns an object instead of string
+            newMessage.translated_text = (translatedText as any).response || (translatedText as any).text || JSON.stringify(translatedText);
+          } else {
+            newMessage.translated_text = String(translatedText || messageText);
+          }
         } else {
           console.error('Translation API returned unsuccessful response:', data);
         }

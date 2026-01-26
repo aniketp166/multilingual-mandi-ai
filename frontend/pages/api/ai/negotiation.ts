@@ -124,8 +124,16 @@ export default async function handler(
       });
     }
 
-    // Extract text - it's a property, not a method
-    const responseText = result.text || '';
+    // Extract text - handle both string and object responses
+    let responseText = '';
+    if (typeof result.text === 'string') {
+      responseText = result.text;
+    } else if (result.text && typeof result.text === 'object') {
+      // Handle case where text is an object (e.g., {response: "...", tone: "..."})
+      responseText = (result.text as any).response || (result.text as any).text || JSON.stringify(result.text);
+    } else {
+      responseText = String(result.text || '');
+    }
     
     // Extract JSON from response (handle markdown code blocks)
     let jsonText = responseText;
