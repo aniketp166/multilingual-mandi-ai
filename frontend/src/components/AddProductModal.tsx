@@ -15,6 +15,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({ isOpen, onClose, onSu
     language: 'en'
   });
   const [errors, setErrors] = useState<Partial<Record<keyof ProductInput, string>>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const validateForm = (): boolean => {
     const newErrors: Partial<Record<keyof ProductInput, string>> = {};
@@ -35,13 +36,40 @@ const AddProductModal: React.FC<AddProductModalProps> = ({ isOpen, onClose, onSu
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (validateForm()) {
-      onSubmit(formData);
+    
+    console.log('🔵 Modal handleSubmit called');
+    console.log('🔵 isSubmitting state:', isSubmitting);
+    
+    if (isSubmitting) {
+      console.log('🔴 Already submitting, ignoring duplicate submission');
+      return;
+    }
+    
+    if (!validateForm()) {
+      console.log('🔴 Form validation failed');
+      return;
+    }
+    
+    console.log('🟡 Setting isSubmitting to true');
+    setIsSubmitting(true);
+    
+    try {
+      console.log('🟢 Modal submitting product:', formData);
+      await onSubmit(formData);
+      
+      console.log('🟢 Product submitted successfully, resetting form');
+      // Reset form and close modal only after successful submission
       setFormData({ name: '', quantity: 1, price: 1, language: 'en' });
       setErrors({});
+      console.log('🟢 Closing modal');
       onClose();
+    } catch (error) {
+      console.error('🔴 Error submitting product:', error);
+    } finally {
+      console.log('🟡 Resetting isSubmitting to false');
+      setIsSubmitting(false);
     }
   };
 
@@ -187,9 +215,21 @@ const AddProductModal: React.FC<AddProductModalProps> = ({ isOpen, onClose, onSu
             </button>
             <button
               type="submit"
-              className="flex-1 px-6 py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-1"
+              disabled={isSubmitting}
+              className={`flex-1 px-6 py-4 ${
+                isSubmitting 
+                  ? 'bg-gray-400 cursor-not-allowed' 
+                  : 'bg-gradient-to-r from-emerald-500 to-emerald-600 hover:shadow-xl hover:-translate-y-1'
+              } text-white font-semibold rounded-xl shadow-lg transition-all duration-200 transform`}
             >
-              Add Product
+              {isSubmitting ? (
+                <span className="flex items-center justify-center space-x-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Adding...</span>
+                </span>
+              ) : (
+                'Add Product'
+              )}
             </button>
           </div>
         </form>

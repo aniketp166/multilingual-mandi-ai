@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Product, PriceSuggestionResponse } from '../types';
 import { geminiAI } from '../services/gemini';
 
@@ -20,13 +20,7 @@ const PriceSuggestionModal: React.FC<PriceSuggestionModalProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [customPrice, setCustomPrice] = useState<number>(product.price);
 
-  useEffect(() => {
-    if (isOpen && product) {
-      fetchPriceSuggestion();
-    }
-  }, [isOpen, product]);
-
-  const fetchPriceSuggestion = async () => {
+  const fetchPriceSuggestion = useCallback(async () => {
     setLoading(true);
     setError(null);
     
@@ -49,7 +43,13 @@ const PriceSuggestionModal: React.FC<PriceSuggestionModalProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [product.name, product.quantity, product.price]);
+
+  useEffect(() => {
+    if (isOpen && product) {
+      fetchPriceSuggestion();
+    }
+  }, [isOpen, product, fetchPriceSuggestion]);
 
   const handleAcceptPrice = (price: number) => {
     if (onAcceptPrice) {

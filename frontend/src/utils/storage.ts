@@ -115,20 +115,25 @@ export class StorageManager {
   }
 
   // Migrate data between versions
-  private migrateData(oldData: any): LocalStorageData {
+  private migrateData(oldData: unknown): LocalStorageData {
     const newData = getDefaultData();
     
-    // Preserve existing products if they exist
-    if (oldData.products && Array.isArray(oldData.products)) {
-      newData.products = oldData.products;
-    }
+    // Type guard to check if oldData is an object with the expected structure
+    if (oldData && typeof oldData === 'object' && oldData !== null) {
+      const data = oldData as Record<string, unknown>;
+      
+      // Preserve existing products if they exist
+      if (data.products && Array.isArray(data.products)) {
+        newData.products = data.products;
+      }
 
-    // Preserve user preferences if they exist
-    if (oldData.user_preferences) {
-      newData.user_preferences = {
-        ...newData.user_preferences,
-        ...oldData.user_preferences,
-      };
+      // Preserve user preferences if they exist
+      if (data.user_preferences && typeof data.user_preferences === 'object') {
+        newData.user_preferences = {
+          ...newData.user_preferences,
+          ...(data.user_preferences as Record<string, unknown>),
+        };
+      }
     }
 
     return newData;
@@ -140,16 +145,44 @@ export class StorageManager {
   }
 
   public addProduct(product: Omit<Product, 'id' | 'created_at' | 'updated_at'>): Product {
+    console.log('🔵 Storage.addProduct called with:', product);
+    console.log('🔵 Current products in storage:', this.data.products.length);
+    
     const now = new Date().toISOString();
+    const uniqueId = `product_${Date.now()}_${Math.random().toString(36).substr(2, 12)}_${performance.now().toString(36)}`;
+    
+    console.log('🔵 Generated unique ID:', uniqueId);
+    
     const newProduct: Product = {
       ...product,
-      id: `product_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: uniqueId,
       created_at: now,
       updated_at: now,
     };
 
+    // Check if product with same ID already exists (shouldn't happen but safety check)
+    const existingIndex = this.data.products.findIndex(p => p.id === newProduct.id);
+    if (existingIndex !== -1) {
+      console.warn('🔴 Duplicate product ID detected, regenerating...', uniqueId);
+      return this.addProduct(product); // Retry with new ID
+    }
+
+    // Check if product with same name already exists
+    const existingNameIndex = this.data.products.findIndex(p => 
+      p.name.toLowerCase().trim() === product.name.toLowerCase().trim()
+    );
+    if (existingNameIndex !== -1) {
+      console.warn('🔴 Product with same name already exists:', product.name);
+      throw new Error(`Product with name "${product.name}" already exists`);
+    }
+
+    console.log('🟢 Adding product to storage array');
     this.data.products.push(newProduct);
+    
+    console.log('🟢 Saving to localStorage');
     this.saveToStorage();
+    
+    console.log('🟢 Product added successfully, new count:', this.data.products.length);
     return newProduct;
   }
 
@@ -276,7 +309,8 @@ export class StorageManager {
       const available = total - used;
 
       return { used, available, total };
-    } catch (error) {
+    } catch (err) {
+      console.error('Error calculating storage info:', err);
       return { used: 0, available: 0, total: 0 };
     }
   }

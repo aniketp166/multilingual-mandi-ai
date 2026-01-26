@@ -11,7 +11,7 @@ import {
 } from '../types';
 
 // Gemini API Response wrapper
-interface GeminiResponse<T = any> {
+interface GeminiResponse<T = unknown> {
   data: T;
   success: boolean;
   message?: string;
@@ -38,7 +38,7 @@ class GeminiAIClient {
   }
 
   // Generic API request to our secure endpoints
-  private async makeApiRequest<T>(endpoint: string, data: any): Promise<GeminiResponse<T>> {
+  private async makeApiRequest<T>(endpoint: string, data: unknown): Promise<GeminiResponse<T>> {
     try {
       const response = await fetch(`${this.baseUrl}${endpoint}`, {
         method: 'POST',

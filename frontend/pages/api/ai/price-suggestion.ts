@@ -134,6 +134,7 @@ export default async function handler(
         success: true
       });
     } catch (parseError) {
+      console.error('Failed to parse price suggestion response:', parseError);
       throw new Error('Failed to parse price suggestion response');
     }
 

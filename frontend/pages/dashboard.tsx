@@ -13,6 +13,7 @@ const Dashboard: React.FC = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isPriceSuggestionModalOpen, setIsPriceSuggestionModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [isAddingProduct, setIsAddingProduct] = useState(false);
 
   // Load products from storage on component mount
   useEffect(() => {
@@ -30,14 +31,58 @@ const Dashboard: React.FC = () => {
     loadProducts();
   }, []);
 
-  // Add new product
+  // Add new product with duplicate prevention
   const handleAddProduct = (productInput: ProductInput) => {
-    const newProduct = storage.addProduct({
-      ...productInput,
-      currency: config.defaults.currency,
-    });
+    console.log('🔵 handleAddProduct called with:', productInput);
+    console.log('🔵 isAddingProduct state:', isAddingProduct);
+    console.log('🔵 Current products count:', products.length);
+    
+    if (isAddingProduct) {
+      console.log('🔴 Already adding product, ignoring duplicate request');
+      return;
+    }
+    
+    // Check for duplicate product names
+    const existingProduct = products.find(p => 
+      p.name.toLowerCase().trim() === productInput.name.toLowerCase().trim()
+    );
+    
+    if (existingProduct) {
+      console.log('🔴 Duplicate product name found:', existingProduct);
+      alert(`A product named "${productInput.name}" already exists. Please use a different name.`);
+      return;
+    }
+    
+    console.log('🟡 Setting isAddingProduct to true');
+    setIsAddingProduct(true);
+    
+    try {
+      console.log('🟢 Adding product to storage:', productInput);
+      
+      const newProduct = storage.addProduct({
+        ...productInput,
+        currency: config.defaults.currency,
+      });
 
-    setProducts(prev => [...prev, newProduct]);
+      console.log('🟢 Product added to storage successfully:', newProduct);
+      console.log('🟢 Reloading products from storage to ensure consistency...');
+      
+      // Instead of manually updating state, reload from storage to ensure consistency
+      const updatedProducts = storage.getProducts();
+      console.log('🟢 Reloaded products from storage:', updatedProducts.length);
+      setProducts(updatedProducts);
+      
+    } catch (error) {
+      console.error('🔴 Error adding product:', error);
+      alert('Failed to add product. Please try again.');
+    } finally {
+      // Reset the flag after a short delay to prevent rapid double-clicks
+      console.log('🟡 Resetting isAddingProduct flag in 500ms');
+      setTimeout(() => {
+        console.log('🟡 Resetting isAddingProduct to false');
+        setIsAddingProduct(false);
+      }, 500);
+    }
   };
 
   // Add sample product for demo
