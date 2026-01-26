@@ -513,6 +513,7 @@ const Dashboard: React.FC = () => {
           isOpen={isAddModalOpen}
           onClose={() => setIsAddModalOpen(false)}
           onSubmit={handleAddProduct}
+          defaultLanguage={vendorLanguage}
         />
 
         {selectedProduct && (

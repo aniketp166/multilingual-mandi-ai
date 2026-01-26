@@ -79,15 +79,15 @@ const Navbar: React.FC = () => {
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <div className="md:hidden py-4 border-t border-gray-200">
-            <div className="flex flex-col space-y-2">
+          <div className="md:hidden py-4 border-t border-gray-100 animate-slide-down bg-white shadow-xl rounded-b-2xl absolute left-0 right-0 top-full">
+            <div className="flex flex-col space-y-1 px-4">
               {navigation.map((item) => (
                 <Link
                   key={item.name}
                   href={item.href}
                   onClick={() => setIsMenuOpen(false)}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive(item.href)
-                    ? 'bg-emerald-100 text-emerald-700'
+                  className={`px-4 py-3.5 rounded-xl text-base font-semibold transition-all active:scale-[0.98] ${isActive(item.href)
+                    ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-100'
                     : 'text-gray-600 hover:text-emerald-600 hover:bg-emerald-50'
                     }`}
                 >
