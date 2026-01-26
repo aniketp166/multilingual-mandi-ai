@@ -1,19 +1,26 @@
 import React, { useState } from 'react';
-import { ProductInput, SAMPLE_PRODUCTS, SUPPORTED_LANGUAGES } from '../types';
+import { Product, ProductInput, SAMPLE_PRODUCTS, SUPPORTED_LANGUAGES } from '../types';
 
 interface AddProductModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (product: ProductInput) => void;
   defaultLanguage?: string;
+  editProduct?: Product | null; // Add support for editing
 }
 
-const AddProductModal: React.FC<AddProductModalProps> = ({ isOpen, onClose, onSubmit, defaultLanguage = 'en' }) => {
+const AddProductModal: React.FC<AddProductModalProps> = ({ 
+  isOpen, 
+  onClose, 
+  onSubmit, 
+  defaultLanguage = 'en',
+  editProduct = null 
+}) => {
   const [formData, setFormData] = useState<ProductInput>({
-    name: '',
-    quantity: 1,
-    price: 1,
-    language: defaultLanguage
+    name: editProduct?.name || '',
+    quantity: editProduct?.quantity || 1,
+    price: editProduct?.price || 1,
+    language: editProduct?.language || defaultLanguage
   });
   const [errors, setErrors] = useState<Partial<Record<keyof ProductInput, string>>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -28,6 +35,19 @@ const AddProductModal: React.FC<AddProductModalProps> = ({ isOpen, onClose, onSu
       };
     }
   }, [isOpen]);
+
+  // Reset form when editProduct changes or modal opens
+  React.useEffect(() => {
+    if (isOpen) {
+      setFormData({
+        name: editProduct?.name || '',
+        quantity: editProduct?.quantity || 1,
+        price: editProduct?.price || 1,
+        language: editProduct?.language || defaultLanguage
+      });
+      setErrors({});
+    }
+  }, [isOpen, editProduct, defaultLanguage]);
 
   const validateForm = (): boolean => {
     const newErrors: Partial<Record<keyof ProductInput, string>> = {};
@@ -102,8 +122,12 @@ const AddProductModal: React.FC<AddProductModalProps> = ({ isOpen, onClose, onSu
         <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white p-6 sm:rounded-t-2xl flex-shrink-0 relative">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-bold mb-1">📦 Add Product</h2>
-              <p className="text-emerald-100 text-sm">List your product for sale</p>
+              <h2 className="text-2xl font-bold mb-1">
+                {editProduct ? '✏️ Edit Product' : '📦 Add Product'}
+              </h2>
+              <p className="text-emerald-100 text-sm">
+                {editProduct ? 'Update your product details' : 'List your product for sale'}
+              </p>
             </div>
             <button
               onClick={onClose}
@@ -245,7 +269,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({ isOpen, onClose, onSu
                 <span>Adding...</span>
               </span>
             ) : (
-              'Add Product'
+              editProduct ? 'Update Product' : 'Add Product'
             )}
           </button>
         </div>

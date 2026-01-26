@@ -14,6 +14,7 @@ const Dashboard: React.FC = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isPriceSuggestionModalOpen, setIsPriceSuggestionModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isAddingProduct, setIsAddingProduct] = useState(false);
   const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
   const [activeChatSession, setActiveChatSession] = useState<ChatSession | null>(null);
@@ -122,6 +123,32 @@ const Dashboard: React.FC = () => {
       return;
     }
 
+    // If editing, update the product
+    if (editingProduct) {
+      try {
+        const updatedProduct = {
+          ...editingProduct,
+          ...productInput,
+          updated_at: new Date().toISOString()
+        };
+
+        const success = storage.updateProductByObject(updatedProduct);
+
+        if (success) {
+          setProducts(prev => prev.map(p => p.id === editingProduct.id ? updatedProduct : p));
+          setEditingProduct(null);
+        } else {
+          alert('Failed to update product');
+        }
+      } catch (error) {
+        console.error('Error updating product:', error);
+        alert(`Failed to update product: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        throw error;
+      }
+      return;
+    }
+
+    // Otherwise, add new product
     const existingProduct = products.find(p =>
       p.name.toLowerCase().trim() === productInput.name.toLowerCase().trim()
     );
@@ -192,7 +219,8 @@ const Dashboard: React.FC = () => {
   };
 
   const handleEditProduct = (product: Product) => {
-    console.log('Edit product:', product);
+    setEditingProduct(product);
+    setIsAddModalOpen(true);
   };
 
   const handlePriceSuggest = (product: Product) => {
@@ -622,9 +650,13 @@ const Dashboard: React.FC = () => {
 
         <AddProductModal
           isOpen={isAddModalOpen}
-          onClose={() => setIsAddModalOpen(false)}
+          onClose={() => {
+            setIsAddModalOpen(false);
+            setEditingProduct(null);
+          }}
           onSubmit={handleAddProduct}
           defaultLanguage={vendorLanguage}
+          editProduct={editingProduct}
         />
 
         {selectedProduct && (
