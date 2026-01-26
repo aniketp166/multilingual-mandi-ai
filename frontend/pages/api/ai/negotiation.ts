@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 interface ConversationMessage {
   sender: 'buyer' | 'vendor';
@@ -74,7 +74,8 @@ export default async function handler(
       });
     }
 
-    const client = new GoogleGenAI({ apiKey });
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const conversationHistory = conversation_history
       .map(msg => `${msg.sender}: ${msg.text}`)
@@ -102,35 +103,22 @@ Return ONLY a JSON object with this exact format:
 
     let result;
     try {
-      result = await client.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        config: {
-          temperature: 0.7,
-          maxOutputTokens: 1000,
-        }
-      });
+      result = await model.generateContent(prompt);
     } catch (error) {
       console.error('Gemini error:', error);
-      result = await client.models.generateContent({
-        model: 'gemini-2.5-flash-lite',
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        config: {
-          temperature: 0.7,
-          maxOutputTokens: 1000,
-        }
-      });
+      throw error;
     }
 
     let responseText = '';
-    if (result?.candidates?.[0]?.content?.parts?.[0]?.text) {
-      responseText = result.candidates[0].content.parts[0].text;
-    } else if (typeof result?.text === 'string') {
-      responseText = result.text;
-    } else if (result?.text && typeof result.text === 'object') {
-      responseText = (result.text as any).response || (result.text as any).text || JSON.stringify(result.text);
-    } else {
-      responseText = String(result?.text || '');
+    try {
+      if (result && result.response) {
+        responseText = result.response.text();
+      } else {
+        responseText = JSON.stringify(result);
+      }
+    } catch (textError) {
+      console.error('Error extracting text:', textError);
+      responseText = JSON.stringify(result);
     }
     
     let jsonText = responseText.trim();

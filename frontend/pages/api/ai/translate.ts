@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 interface TranslationRequest {
   text: string;
@@ -46,7 +46,6 @@ export default async function handler(
     const apiKey = process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
-      // Return mock response for development
       const mockResponse: TranslationResponse = {
         translated_text: `[MOCK] Translated: ${text}`,
         original_text: text,
@@ -62,7 +61,8 @@ export default async function handler(
       });
     }
 
-    const genai = new GoogleGenAI({ apiKey });
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
     
     const prompt = `Translate the following text from ${source_language} to ${target_language}. 
     Only return the translated text, nothing else.
@@ -71,37 +71,22 @@ export default async function handler(
 
     let result;
     try {
-      result = await genai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        config: {
-          temperature: 0.3,
-          maxOutputTokens: 1000,
-        }
-      });
+      result = await model.generateContent(prompt);
     } catch (error) {
       console.error('Gemini error:', error);
-      result = await genai.models.generateContent({
-        model: 'gemini-2.5-flash-lite',
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        config: {
-          temperature: 0.3,
-          maxOutputTokens: 1000,
-        }
-      });
+      throw error;
     }
 
-    // Extract text - handle both string and object responses
     let translatedText = '';
-    if (result?.candidates?.[0]?.content?.parts?.[0]?.text) {
-      translatedText = result.candidates[0].content.parts[0].text;
-    } else if (typeof result?.text === 'string') {
-      translatedText = result.text;
-    } else if (result?.text && typeof result.text === 'object') {
-      // Handle case where text is an object (e.g., {response: "...", tone: "..."})
-      translatedText = (result.text as any).response || (result.text as any).text || JSON.stringify(result.text);
-    } else {
-      translatedText = String(result?.text || '');
+    try {
+      if (result && result.response) {
+        translatedText = result.response.text();
+      } else {
+        translatedText = JSON.stringify(result);
+      }
+    } catch (textError) {
+      console.error('Error extracting text:', textError);
+      translatedText = JSON.stringify(result);
     }
 
     const translationResponse: TranslationResponse = {
@@ -120,7 +105,6 @@ export default async function handler(
   } catch (error) {
     console.error('Translation API error:', error);
     
-    // Fallback to mock response on error
     const mockResponse: TranslationResponse = {
       translated_text: `[FALLBACK] ${req.body.text}`,
       original_text: req.body.text,

@@ -119,7 +119,6 @@ export default function NegotiationChat({
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-0 sm:p-4 overflow-hidden animate-fade-in">
       <div className="bg-white rounded-none sm:rounded-2xl shadow-2xl w-full sm:max-w-2xl h-full sm:h-auto sm:max-h-[90vh] flex flex-col my-auto transition-all duration-300 animate-scale-in">
-        {/* Header */}
         <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white p-4 sm:p-6 sm:rounded-t-2xl flex justify-between items-center shadow-lg relative z-10">
           <div className="flex-1">
             <h2 className="text-xl sm:text-2xl font-bold">{product.name}</h2>

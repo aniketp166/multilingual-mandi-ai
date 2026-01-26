@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 interface PriceSuggestionRequest {
   product_name: string;
@@ -48,7 +48,6 @@ export default async function handler(
     const apiKey = process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
-      // Return mock response for development
       const mockResponse: PriceSuggestionResponse = {
         min_price: Math.max(1, current_price ? current_price * 0.8 : 20),
         max_price: current_price ? current_price * 1.2 : 60,
@@ -65,7 +64,8 @@ export default async function handler(
       });
     }
 
-    const genai = new GoogleGenAI({ apiKey });
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const prompt = `As a market analyst for Indian agricultural products, provide pricing recommendations for the following:
 
@@ -92,38 +92,24 @@ export default async function handler(
 
     let result;
     try {
-      result = await genai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        config: {
-          temperature: 0.7,
-          maxOutputTokens: 1000,
-        }
-      });
+      result = await model.generateContent(prompt);
     } catch (error) {
       console.error('Gemini error:', error);
-      result = await genai.models.generateContent({
-        model: 'gemini-2.5-flash-lite',
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        config: {
-          temperature: 0.7,
-          maxOutputTokens: 1000,
-        }
-      });
+      throw error;
     }
 
     let responseText = '';
-    if (result?.candidates?.[0]?.content?.parts?.[0]?.text) {
-      responseText = result.candidates[0].content.parts[0].text;
-    } else if (typeof result?.text === 'string') {
-      responseText = result.text;
-    } else if (result?.text && typeof result.text === 'object') {
-      responseText = (result.text as any).response || (result.text as any).text || JSON.stringify(result.text);
-    } else {
-      responseText = String(result?.text || '');
+    try {
+      if (result && result.response) {
+        responseText = result.response.text();
+      } else {
+        responseText = JSON.stringify(result);
+      }
+    } catch (textError) {
+      console.error('Error extracting text:', textError);
+      responseText = JSON.stringify(result);
     }
     
-    // Extract JSON (safely handle markdown or raw JSON)
     let jsonText = responseText;
     const jsonMatch = responseText.match(/```json\n([\s\S]*?)\n```/) || 
                       responseText.match(/```\n([\s\S]*?)\n```/) ||
@@ -158,7 +144,6 @@ export default async function handler(
   } catch (error) {
     console.error('Price suggestion API error:', error);
     
-    // Fallback to mock response on error
     const mockResponse: PriceSuggestionResponse = {
       min_price: Math.max(1, req.body.current_price ? req.body.current_price * 0.8 : 20),
       max_price: req.body.current_price ? req.body.current_price * 1.2 : 60,

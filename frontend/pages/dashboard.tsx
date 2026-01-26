@@ -20,47 +20,59 @@ const Dashboard: React.FC = () => {
   const [vendorLanguage, setVendorLanguage] = useState('en');
 
   useEffect(() => {
-    const loadProducts = () => {
+    const loadData = () => {
       try {
         const storedProducts = storage.getProducts();
         setProducts(storedProducts);
         const storedChatSessions = storage.getChatSessions();
-        // Filter for active sessions that have messages
         setChatSessions(storedChatSessions.filter(s => s.status === 'active' && s.messages.length > 0));
-        
-        // Load vendor language preference
+
         const prefs = storage.getUserPreferences();
         if (prefs.language) {
           setVendorLanguage(prefs.language);
         }
       } catch (error) {
-        console.error('Error loading products:', error);
+        console.error('Error loading data:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    loadProducts();
-  }, []);
+    loadData();
 
-  // Poll for chat updates when a chat is active
-  useEffect(() => {
-    if (!activeChatSession) return;
-
-    const pollInterval = setInterval(() => {
-      const allSessions = storage.getChatSessions();
-      const updatedSession = allSessions.find(s => s.id === activeChatSession.id);
-      
-      if (updatedSession && updatedSession.messages.length !== activeChatSession.messages.length) {
-        console.log('🔄 Chat session updated, refreshing...');
-        setActiveChatSession(updatedSession);
-        
-        // Also update the chat sessions list
-        setChatSessions(allSessions.filter(s => s.status === 'active' && s.messages.length > 0));
+    // Sync with other tabs
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'multilingual-mandi-data') {
+        loadData();
       }
-    }, 2000); // Poll every 2 seconds
+    };
 
-    return () => clearInterval(pollInterval);
+    window.addEventListener('storage', handleStorageChange);
+
+    // Background poll for all updates
+    const globalPoll = setInterval(() => {
+      const allSessions = storage.getChatSessions();
+      const activeSessions = allSessions.filter(s => s.status === 'active' && s.messages.length > 0);
+
+      setChatSessions(prev => {
+        if (JSON.stringify(prev) !== JSON.stringify(activeSessions)) {
+          return activeSessions;
+        }
+        return prev;
+      });
+
+      if (activeChatSession) {
+        const updatedSession = allSessions.find(s => s.id === activeChatSession.id);
+        if (updatedSession && updatedSession.messages.length !== activeChatSession.messages.length) {
+          setActiveChatSession(updatedSession);
+        }
+      }
+    }, 2000);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(globalPoll);
+    };
   }, [activeChatSession]);
 
   // Poll for new chat sessions even when no chat is active
@@ -68,13 +80,13 @@ const Dashboard: React.FC = () => {
     const pollInterval = setInterval(() => {
       const allSessions = storage.getChatSessions();
       const activeSessions = allSessions.filter(s => s.status === 'active' && s.messages.length > 0);
-      
+
       // Check if there are new messages in any session
       const hasUpdates = activeSessions.some(newSession => {
         const oldSession = chatSessions.find(s => s.id === newSession.id);
         return !oldSession || oldSession.messages.length !== newSession.messages.length;
       });
-      
+
       if (hasUpdates || activeSessions.length !== chatSessions.length) {
         console.log('🔄 Chat sessions list updated');
         setChatSessions(activeSessions);
@@ -93,18 +105,18 @@ const Dashboard: React.FC = () => {
     if (isAddingProduct) {
       return;
     }
-    
-    const existingProduct = products.find(p => 
+
+    const existingProduct = products.find(p =>
       p.name.toLowerCase().trim() === productInput.name.toLowerCase().trim()
     );
-    
+
     if (existingProduct) {
       alert(`A product named "${productInput.name}" already exists. Please use a different name.`);
       return;
     }
-    
+
     setIsAddingProduct(true);
-    
+
     try {
       const newProduct = storage.addProduct({
         ...productInput,
@@ -112,7 +124,7 @@ const Dashboard: React.FC = () => {
       });
 
       setProducts(prev => [...prev, newProduct]);
-      
+
     } catch (error) {
       console.error('Error adding product:', error);
       alert(`Failed to add product: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -134,7 +146,7 @@ const Dashboard: React.FC = () => {
     ];
 
     const randomSample = sampleProducts[Math.floor(Math.random() * sampleProducts.length)];
-    
+
     const newProduct = storage.addProduct({
       ...randomSample,
       currency: config.defaults.currency,
@@ -163,7 +175,7 @@ const Dashboard: React.FC = () => {
     if (selectedProduct) {
       const updatedProduct = { ...selectedProduct, price: newPrice, updated_at: new Date().toISOString() };
       const success = storage.updateProductByObject(updatedProduct);
-      
+
       if (success) {
         setProducts(prev => prev.map(p => p.id === selectedProduct.id ? updatedProduct : p));
       }
@@ -178,7 +190,7 @@ const Dashboard: React.FC = () => {
       // Refresh the session from storage to get latest messages
       const allSessions = storage.getChatSessions();
       const latestSession = allSessions.find(s => s.id === session.id);
-      
+
       setSelectedProduct(product);
       setActiveChatSession(latestSession || session);
     }
@@ -200,7 +212,7 @@ const Dashboard: React.FC = () => {
     const lastBuyerMessage = activeChatSession.messages
       .filter(m => m.sender === 'buyer')
       .pop();
-    
+
     if (lastBuyerMessage && lastBuyerMessage.language !== vendorLanguage) {
       try {
         const response = await fetch('/api/ai/translate', {
@@ -258,7 +270,7 @@ const Dashboard: React.FC = () => {
 
   const handleClearChatMessages = () => {
     if (!activeChatSession) return;
-    
+
     const updatedSession = storage.updateChatSession(activeChatSession.id, {
       messages: []
     });
@@ -300,7 +312,7 @@ const Dashboard: React.FC = () => {
               backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
             }}></div>
           </div>
-          
+
           <div className="max-w-7xl mx-auto px-6 py-12 sm:py-16 relative">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
               <div className="flex-1">
@@ -323,7 +335,7 @@ const Dashboard: React.FC = () => {
                     🇮🇳 Empowering local markets with cutting-edge technology
                   </span>
                 </p>
-                
+
                 {/* Language Selector */}
                 <div className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-xl p-4 max-w-md">
                   <span className="text-white/90 font-semibold text-sm">Your Language:</span>
@@ -343,7 +355,7 @@ const Dashboard: React.FC = () => {
                   </select>
                 </div>
               </div>
-              
+
               <div className="flex flex-col gap-3 lg:flex-shrink-0 lg:w-64">
                 <button
                   onClick={() => setIsAddModalOpen(true)}
@@ -384,7 +396,7 @@ const Dashboard: React.FC = () => {
                   </div>
                 </div>
               </div>
-              
+
               <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100 hover:shadow-2xl transition-shadow duration-200">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
@@ -399,7 +411,7 @@ const Dashboard: React.FC = () => {
                   </div>
                 </div>
               </div>
-              
+
               <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100 hover:shadow-2xl transition-shadow duration-200">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
@@ -455,7 +467,7 @@ const Dashboard: React.FC = () => {
                   </div>
                 </div>
                 <div className="w-full sm:w-32 h-3 bg-amber-200 rounded-full overflow-hidden">
-                  <div 
+                  <div
                     className="h-full bg-gradient-to-r from-amber-400 to-orange-500 transition-all duration-500"
                     style={{ width: `${Math.min(storageUsedPercent, 100)}%` }}
                   />

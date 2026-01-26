@@ -141,10 +141,12 @@ export class StorageManager {
 
   // Product management methods
   public getProducts(): Product[] {
+    this.data = this.loadFromStorage();
     return this.data.products;
   }
 
   public addProduct(product: Omit<Product, 'id' | 'created_at' | 'updated_at'>): Product {
+    this.data = this.loadFromStorage();
     const now = new Date().toISOString();
     const uniqueId = `product_${Date.now()}_${Math.random().toString(36).substring(2, 14)}_${performance.now().toString(36)}`;
     
@@ -155,13 +157,11 @@ export class StorageManager {
       updated_at: now,
     };
 
-    // Check if product with same ID already exists (shouldn't happen but safety check)
     const existingIndex = this.data.products.findIndex(p => p.id === newProduct.id);
     if (existingIndex !== -1) {
-      return this.addProduct(product); // Retry with new ID
+      return this.addProduct(product);
     }
 
-    // Check if product with same name already exists
     const existingNameIndex = this.data.products.findIndex(p => 
       p.name.toLowerCase().trim() === product.name.toLowerCase().trim()
     );
@@ -174,7 +174,6 @@ export class StorageManager {
     const saved = this.saveToStorage();
     
     if (!saved) {
-      // Rollback the addition
       this.data.products.pop();
       throw new Error('Failed to save product to storage');
     }
@@ -183,6 +182,7 @@ export class StorageManager {
   }
 
   public updateProduct(id: string, updates: Partial<Omit<Product, 'id' | 'created_at'>>): Product | null {
+    this.data = this.loadFromStorage();
     const productIndex = this.data.products.findIndex(p => p.id === id);
     if (productIndex === -1) {
       return null;
@@ -200,6 +200,7 @@ export class StorageManager {
   }
 
   public updateProductByObject(product: Product): boolean {
+    this.data = this.loadFromStorage();
     const productIndex = this.data.products.findIndex(p => p.id === product.id);
     if (productIndex === -1) {
       return false;
@@ -214,6 +215,7 @@ export class StorageManager {
   }
 
   public deleteProduct(id: string): boolean {
+    this.data = this.loadFromStorage();
     const initialLength = this.data.products.length;
     this.data.products = this.data.products.filter(p => p.id !== id);
     
@@ -225,15 +227,17 @@ export class StorageManager {
   }
 
   public getProduct(id: string): Product | null {
+    this.data = this.loadFromStorage();
     return this.data.products.find(p => p.id === id) || null;
   }
 
-  // User preferences methods
   public getUserPreferences() {
+    this.data = this.loadFromStorage();
     return this.data.user_preferences;
   }
 
   public updateUserPreferences(updates: Partial<LocalStorageData['user_preferences']>): void {
+    this.data = this.loadFromStorage();
     this.data.user_preferences = {
       ...this.data.user_preferences,
       ...updates,
@@ -241,12 +245,13 @@ export class StorageManager {
     this.saveToStorage();
   }
 
-  // Chat session methods
   public getChatSessions(): ChatSession[] {
+    this.data = this.loadFromStorage();
     return this.data.chat_sessions;
   }
 
   public addChatSession(session: Omit<ChatSession, 'id' | 'created_at'>): ChatSession {
+    this.data = this.loadFromStorage();
     const newSession: ChatSession = {
       ...session,
       id: `chat_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
@@ -259,6 +264,7 @@ export class StorageManager {
   }
 
   public updateChatSession(id: string, updates: Partial<Omit<ChatSession, 'id' | 'created_at'>>): ChatSession | null {
+    this.data = this.loadFromStorage();
     const sessionIndex = this.data.chat_sessions.findIndex(s => s.id === id);
     if (sessionIndex === -1) {
       return null;

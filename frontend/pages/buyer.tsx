@@ -27,23 +27,32 @@ export default function BuyerPage() {
 
   useEffect(() => {
     loadProducts();
-  }, []);
 
-  // Poll for chat updates when a chat is active
-  useEffect(() => {
-    if (!activeChatSession) return;
-
-    const pollInterval = setInterval(() => {
-      const allSessions = storage.getChatSessions();
-      const updatedSession = allSessions.find(s => s.id === activeChatSession.id);
-      
-      if (updatedSession && updatedSession.messages.length !== activeChatSession.messages.length) {
-        console.log('🔄 Chat session updated, refreshing...');
-        setActiveChatSession(updatedSession);
+    // Sync with other tabs
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'multilingual-mandi-data') {
+        loadProducts();
       }
-    }, 2000); // Poll every 2 seconds
+    };
 
-    return () => clearInterval(pollInterval);
+    window.addEventListener('storage', handleStorageChange);
+
+    // Background poll for active chat updates
+    const pollInterval = setInterval(() => {
+      if (activeChatSession) {
+        const allSessions = storage.getChatSessions();
+        const updatedSession = allSessions.find(s => s.id === activeChatSession.id);
+
+        if (updatedSession && updatedSession.messages.length !== activeChatSession.messages.length) {
+          setActiveChatSession(updatedSession);
+        }
+      }
+    }, 2000);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(pollInterval);
+    };
   }, [activeChatSession]);
 
   const loadProducts = () => {
@@ -53,7 +62,7 @@ export default function BuyerPage() {
 
   const handleStartChat = (product: Product) => {
     setSelectedProduct(product);
-    
+
     // Check if there's an existing chat session for this product - always get fresh from storage
     const existingSessions = storage.getChatSessions();
     const existingSession = existingSessions.find(
@@ -104,7 +113,7 @@ export default function BuyerPage() {
         console.log('Translation API response status:', response.status);
         const data = await response.json();
         console.log('Translation API response data:', data);
-        
+
         if (data.success && data.data) {
           // Ensure translated_text is a string, not an object
           const translatedText = data.data.translated_text;
@@ -142,7 +151,7 @@ export default function BuyerPage() {
 
   const handleClearChatMessages = () => {
     if (!activeChatSession) return;
-    
+
     const updatedSession = storage.updateChatSession(activeChatSession.id, {
       messages: []
     });
@@ -168,7 +177,7 @@ export default function BuyerPage() {
               backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
             }}></div>
           </div>
-          
+
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 relative">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
               <div className="flex-1">
@@ -192,7 +201,7 @@ export default function BuyerPage() {
                   </span>
                 </p>
               </div>
-              
+
               {/* Language Selector */}
               <div className="flex flex-col gap-3 lg:flex-shrink-0 lg:w-80">
                 <div className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
@@ -259,7 +268,7 @@ export default function BuyerPage() {
                   Showing <span className="font-semibold text-gray-900">{filteredProducts.length}</span> {filteredProducts.length === 1 ? 'product' : 'products'}
                 </p>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {filteredProducts.map((product) => (
                   <div
