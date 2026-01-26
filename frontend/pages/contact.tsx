@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import Head from 'next/head';
-import Link from 'next/link';
+import Layout from '../src/components/Layout';
 
 const Contact: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -27,64 +26,68 @@ const Contact: React.FC = () => {
   };
 
   return (
-    <>
-      <Head>
-        <title>Contact - Multilingual Mandi</title>
-        <meta name="description" content="Get in touch with the Multilingual Mandi team" />
-      </Head>
-
-      <div className="min-h-screen bg-background">
-        {/* Header Navigation */}
-        <header className="bg-surface border-b border-default sticky top-0 z-30">
-          <div className="container">
-            <nav className="flex items-center justify-between py-4">
-              <div className="flex items-center space-x-2">
-                <h1 className="text-xl font-bold text-primary">
-                  🛒 मल्टीलिंगुअल मंडी
+    <Layout 
+      title="Contact - Multilingual Mandi" 
+      description="Get in touch with the Multilingual Mandi team"
+    >
+      {/* Hero Section */}
+      <div className="bg-gradient-to-br from-emerald-600 via-emerald-700 to-emerald-800 text-white relative overflow-hidden">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+          }}></div>
+        </div>
+        
+        <div className="container mx-auto px-4 py-16 lg:py-20 relative">
+          <div className="text-center animate-slide-up">
+            <div className="flex items-center justify-center space-x-3 mb-6">
+              <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+                <span className="text-3xl">📞</span>
+              </div>
+              <div>
+                <h1 className="text-4xl lg:text-5xl font-bold mb-2">
+                  Contact Us
                 </h1>
-                <span className="text-sm text-secondary hidden sm:block">
-                  Multilingual Mandi
-                </span>
+                <p className="text-white/80 text-sm font-medium">
+                  मल्टीलिंगुअल मंडी • Multilingual Mandi
+                </p>
               </div>
-              
-              <div className="flex items-center space-x-4">
-                <Link href="/" className="text-sm font-medium text-secondary hover:text-secondary-dark transition-fast">
-                  Home
-                </Link>
-                <Link href="/dashboard" className="text-sm font-medium text-secondary hover:text-secondary-dark transition-fast">
-                  Dashboard
-                </Link>
-                <Link href="/about" className="text-sm font-medium text-secondary hover:text-secondary-dark transition-fast">
-                  About
-                </Link>
-                <Link href="/contact" className="text-sm font-medium text-primary hover:text-primary-dark transition-fast">
-                  Contact
-                </Link>
-              </div>
-            </nav>
-          </div>
-        </header>
-
-        {/* Main Content */}
-        <main className="container py-12">
-          <div className="max-w-4xl mx-auto">
-            <h1 className="text-4xl font-bold text-primary mb-6">
-              Contact Us
-            </h1>
-            
-            <p className="text-xl text-secondary mb-12">
+            </div>
+            <p className="text-white/90 text-lg lg:text-xl max-w-2xl mx-auto leading-relaxed">
               Have questions, feedback, or suggestions? We&apos;d love to hear from you!
+              <span className="block mt-2 text-white/70 text-base">
+                🇮🇳 Building the future of local commerce together
+              </span>
             </p>
+          </div>
+        </div>
+      </div>
 
-            <div className="grid md:grid-cols-2 gap-12">
-              {/* Contact Form */}
-              <div className="card p-8">
-                <h2 className="text-2xl font-semibold text-primary mb-6">Send us a message</h2>
+      {/* Main Content */}
+      <div className="container mx-auto px-4 py-12 lg:py-16">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
+            {/* Contact Form */}
+            <div className="animate-slide-up">
+              <div className="bg-white rounded-2xl shadow-2xl p-8 lg:p-10 border border-gray-100">
+                <div className="flex items-center space-x-3 mb-8">
+                  <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center">
+                    <span className="text-white text-xl">📝</span>
+                  </div>
+                  <div>
+                    <h2 className="text-2xl lg:text-3xl font-bold text-gray-900">Send us a message</h2>
+                    <p className="text-gray-600">We&apos;ll get back to you within 24 hours</p>
+                  </div>
+                </div>
                 
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div>
-                    <label htmlFor="name" className="block text-sm font-medium text-secondary mb-2">
-                      Name *
+                    <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-2">
+                      <span className="flex items-center space-x-2">
+                        <span>👤</span>
+                        <span>Name *</span>
+                      </span>
                     </label>
                     <input
                       type="text"
@@ -93,14 +96,17 @@ const Contact: React.FC = () => {
                       value={formData.name}
                       onChange={handleInputChange}
                       required
-                      className="input-base"
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl bg-white text-gray-900 placeholder-gray-400 transition-all duration-200 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 touch-target"
                       placeholder="Your full name"
                     />
                   </div>
 
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-secondary mb-2">
-                      Email *
+                    <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
+                      <span className="flex items-center space-x-2">
+                        <span>📧</span>
+                        <span>Email *</span>
+                      </span>
                     </label>
                     <input
                       type="email"
@@ -109,14 +115,17 @@ const Contact: React.FC = () => {
                       value={formData.email}
                       onChange={handleInputChange}
                       required
-                      className="input-base"
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl bg-white text-gray-900 placeholder-gray-400 transition-all duration-200 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 touch-target"
                       placeholder="your.email@example.com"
                     />
                   </div>
 
                   <div>
-                    <label htmlFor="subject" className="block text-sm font-medium text-secondary mb-2">
-                      Subject *
+                    <label htmlFor="subject" className="block text-sm font-semibold text-gray-700 mb-2">
+                      <span className="flex items-center space-x-2">
+                        <span>💬</span>
+                        <span>Subject *</span>
+                      </span>
                     </label>
                     <input
                       type="text"
@@ -125,14 +134,17 @@ const Contact: React.FC = () => {
                       value={formData.subject}
                       onChange={handleInputChange}
                       required
-                      className="input-base"
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl bg-white text-gray-900 placeholder-gray-400 transition-all duration-200 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 touch-target"
                       placeholder="What is this about?"
                     />
                   </div>
 
                   <div>
-                    <label htmlFor="message" className="block text-sm font-medium text-secondary mb-2">
-                      Message *
+                    <label htmlFor="message" className="block text-sm font-semibold text-gray-700 mb-2">
+                      <span className="flex items-center space-x-2">
+                        <span>📝</span>
+                        <span>Message *</span>
+                      </span>
                     </label>
                     <textarea
                       id="message"
@@ -141,89 +153,117 @@ const Contact: React.FC = () => {
                       onChange={handleInputChange}
                       required
                       rows={6}
-                      className="input-base resize-none"
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl bg-white text-gray-900 placeholder-gray-400 resize-none transition-all duration-200 focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 touch-target"
                       placeholder="Tell us more about your inquiry..."
                     />
                   </div>
 
                   <button
                     type="submit"
-                    className="btn-base btn-lg btn-primary w-full"
+                    className="w-full px-6 py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:from-emerald-600 hover:to-emerald-700 transition-all duration-200 transform hover:-translate-y-1 touch-target"
                   >
-                    <span className="mr-2">📧</span>
-                    Send Message
+                    <span className="flex items-center justify-center space-x-3">
+                      <span className="text-xl">🚀</span>
+                      <span>Send Message</span>
+                    </span>
                   </button>
                 </form>
               </div>
+            </div>
 
-              {/* Contact Information */}
-              <div className="space-y-8">
-                <div className="card p-6">
-                  <h3 className="text-xl font-semibold text-primary mb-4">
-                    🇮🇳 26 Jan Prompt Challenge
-                  </h3>
-                  <p className="text-secondary">
-                    This project is part of the 26 Jan Prompt Challenge - Viksit Bharat, 
-                    focused on building AI solutions for India&apos;s local markets.
-                  </p>
-                </div>
-
-                <div className="card p-6">
-                  <h3 className="text-xl font-semibold text-primary mb-4">
-                    🚀 Open Source
-                  </h3>
-                  <p className="text-secondary mb-4">
-                    Multilingual Mandi is built with open source technologies and 
-                    welcomes contributions from the community.
-                  </p>
-                  <div className="space-y-2">
-                    <p className="text-sm text-tertiary">
-                      <strong>Frontend:</strong> Next.js, TypeScript, Tailwind CSS
-                    </p>
-                    <p className="text-sm text-tertiary">
-                      <strong>Backend:</strong> Python FastAPI
-                    </p>
-                    <p className="text-sm text-tertiary">
-                      <strong>AI:</strong> Google Gemini API
-                    </p>
+            {/* Contact Information */}
+            <div className="space-y-8 animate-slide-up" style={{ animationDelay: '0.2s' }}>
+              <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl shadow-xl p-8 border border-emerald-200">
+                <div className="flex items-center space-x-3 mb-6">
+                  <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center">
+                    <span className="text-white text-xl">🇮🇳</span>
+                  </div>
+                  <div>
+                    <h3 className="text-xl lg:text-2xl font-bold text-emerald-800">
+                      26 Jan Prompt Challenge
+                    </h3>
+                    <p className="text-emerald-600 text-sm font-medium">Viksit Bharat Initiative</p>
                   </div>
                 </div>
+                <p className="text-emerald-700 leading-relaxed">
+                  This project is part of the 26 Jan Prompt Challenge - Viksit Bharat, 
+                  focused on building AI solutions for India&apos;s local markets and empowering 
+                  vendors with cutting-edge technology.
+                </p>
+              </div>
 
-                <div className="card p-6">
-                  <h3 className="text-xl font-semibold text-primary mb-4">
-                    💡 Feedback Welcome
-                  </h3>
-                  <p className="text-secondary">
-                    We value feedback from traders, developers, and anyone interested 
-                    in making local commerce more inclusive and efficient.
-                  </p>
+              <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+                <div className="flex items-center space-x-3 mb-6">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center">
+                    <span className="text-white text-xl">🚀</span>
+                  </div>
+                  <div>
+                    <h3 className="text-xl lg:text-2xl font-bold text-gray-900">
+                      Open Source
+                    </h3>
+                    <p className="text-gray-600 text-sm font-medium">Community Driven</p>
+                  </div>
                 </div>
+                <p className="text-gray-700 mb-6 leading-relaxed">
+                  Multilingual Mandi is built with open source technologies and 
+                  welcomes contributions from the community.
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-4 border border-gray-200">
+                    <p className="text-sm font-semibold text-gray-800 mb-1">Frontend</p>
+                    <p className="text-xs text-gray-600">Next.js, TypeScript, Tailwind CSS</p>
+                  </div>
+                  <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-4 border border-gray-200">
+                    <p className="text-sm font-semibold text-gray-800 mb-1">AI Integration</p>
+                    <p className="text-xs text-gray-600">Google Gemini API</p>
+                  </div>
+                  <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg p-4 border border-gray-200 sm:col-span-2">
+                    <p className="text-sm font-semibold text-gray-800 mb-1">Deployment</p>
+                    <p className="text-xs text-gray-600">Vercel Platform</p>
+                  </div>
+                </div>
+              </div>
 
-                <div className="card p-6">
-                  <h3 className="text-xl font-semibold text-primary mb-4">
-                    🤝 Collaboration
-                  </h3>
-                  <p className="text-secondary">
-                    Interested in collaborating or contributing to the project? 
-                    We&apos;d love to connect with like-minded individuals and organizations.
-                  </p>
+              <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+                <div className="flex items-center space-x-3 mb-6">
+                  <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center">
+                    <span className="text-white text-xl">💡</span>
+                  </div>
+                  <div>
+                    <h3 className="text-xl lg:text-2xl font-bold text-gray-900">
+                      Feedback Welcome
+                    </h3>
+                    <p className="text-gray-600 text-sm font-medium">Help us improve</p>
+                  </div>
                 </div>
+                <p className="text-gray-700 leading-relaxed">
+                  We value feedback from traders, developers, and anyone interested 
+                  in making local commerce more inclusive and efficient.
+                </p>
+              </div>
+
+              <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+                <div className="flex items-center space-x-3 mb-6">
+                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center">
+                    <span className="text-white text-xl">🤝</span>
+                  </div>
+                  <div>
+                    <h3 className="text-xl lg:text-2xl font-bold text-gray-900">
+                      Collaboration
+                    </h3>
+                    <p className="text-gray-600 text-sm font-medium">Join our mission</p>
+                  </div>
+                </div>
+                <p className="text-gray-700 leading-relaxed">
+                  Interested in collaborating or contributing to the project? 
+                  We&apos;d love to connect with like-minded individuals and organizations.
+                </p>
               </div>
             </div>
           </div>
-        </main>
-
-        {/* Footer */}
-        <footer className="bg-surface-secondary border-t border-default mt-auto">
-          <div className="container py-6">
-            <div className="text-center text-sm text-secondary">
-              <p>🇮🇳 Built for 26 Jan Prompt Challenge - Viksit Bharat</p>
-              <p className="mt-2">Empowering Local Markets with AI</p>
-            </div>
-          </div>
-        </footer>
+        </div>
       </div>
-    </>
+    </Layout>
   );
 };
 
