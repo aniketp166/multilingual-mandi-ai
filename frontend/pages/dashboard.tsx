@@ -47,7 +47,7 @@ const Dashboard: React.FC = () => {
     storage.updateUserPreferences({ language: newLanguage });
   };
 
-  const handleAddProduct = (productInput: ProductInput) => {
+  const handleAddProduct = async (productInput: ProductInput) => {
     if (isAddingProduct) {
       return;
     }
@@ -69,12 +69,12 @@ const Dashboard: React.FC = () => {
         currency: config.defaults.currency,
       });
 
-      const updatedProducts = storage.getProducts();
-      setProducts(updatedProducts);
+      setProducts(prev => [...prev, newProduct]);
       
     } catch (error) {
       console.error('Error adding product:', error);
-      alert('Failed to add product. Please try again.');
+      alert(`Failed to add product: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw error; // Re-throw so modal knows there was an error
     } finally {
       setTimeout(() => {
         setIsAddingProduct(false);
@@ -142,7 +142,7 @@ const Dashboard: React.FC = () => {
     if (!activeChatSession || !selectedProduct) return;
 
     const newMessage: Message = {
-      id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: `msg_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
       sender: 'vendor',
       text: messageText,
       language: vendorLanguage,

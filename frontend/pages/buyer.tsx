@@ -72,6 +72,7 @@ export default function BuyerPage() {
     // Translate message to vendor's language if different
     if (buyerLanguage !== selectedProduct.language) {
       try {
+        console.log('Translating buyer message from', buyerLanguage, 'to', selectedProduct.language);
         const response = await fetch('/api/ai/translate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -82,9 +83,14 @@ export default function BuyerPage() {
           })
         });
 
+        console.log('Translation API response status:', response.status);
         const data = await response.json();
+        console.log('Translation API response data:', data);
+        
         if (data.success && data.data) {
           newMessage.translated_text = data.data.translated_text;
+        } else {
+          console.error('Translation API returned unsuccessful response:', data);
         }
       } catch (error) {
         console.error('Translation error:', error);

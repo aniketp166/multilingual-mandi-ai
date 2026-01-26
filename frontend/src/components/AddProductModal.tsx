@@ -51,36 +51,28 @@ const AddProductModal: React.FC<AddProductModalProps> = ({ isOpen, onClose, onSu
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    console.log('🔵 Modal handleSubmit called');
-    console.log('🔵 isSubmitting state:', isSubmitting);
-
     if (isSubmitting) {
-      console.log('🔴 Already submitting, ignoring duplicate submission');
       return;
     }
 
     if (!validateForm()) {
-      console.log('🔴 Form validation failed');
       return;
     }
 
-    console.log('🟡 Setting isSubmitting to true');
     setIsSubmitting(true);
 
     try {
-      console.log('🟢 Modal submitting product:', formData);
       await onSubmit(formData);
 
-      console.log('🟢 Product submitted successfully, resetting form');
       // Reset form and close modal only after successful submission
-      setFormData({ name: '', quantity: 1, price: 1, language: 'en' });
+      setFormData({ name: '', quantity: 1, price: 1, language: defaultLanguage });
       setErrors({});
-      console.log('🟢 Closing modal');
       onClose();
     } catch (error) {
-      console.error('🔴 Error submitting product:', error);
+      console.error('Error submitting product:', error);
+      // Don't close modal on error - let user see the error and try again
+      alert(`Failed to add product: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
-      console.log('🟡 Resetting isSubmitting to false');
       setIsSubmitting(false);
     }
   };
@@ -239,12 +231,8 @@ const AddProductModal: React.FC<AddProductModalProps> = ({ isOpen, onClose, onSu
             Cancel
           </button>
           <button
-            type="submit"
-            onClick={(e) => {
-              // Manually trigger form submit since buttons are outside form but inside flex container
-              const form = (e.target as HTMLElement).closest('.bg-white')?.querySelector('form');
-              if (form) form.requestSubmit();
-            }}
+            type="button"
+            onClick={handleSubmit}
             disabled={isSubmitting}
             className={`flex-[2] px-6 py-4 ${isSubmitting
               ? 'bg-gray-300 cursor-not-allowed shadow-none'

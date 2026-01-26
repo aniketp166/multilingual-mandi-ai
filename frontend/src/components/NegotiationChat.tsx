@@ -26,6 +26,11 @@ export default function NegotiationChat({
   const lastProcessedMessageId = useRef<string | null>(null);
   const initialMessageCount = useRef<number>(chatSession.messages.length);
 
+  console.log('🔵 NegotiationChat component rendered');
+  console.log('🔵 Props:', { userRole, userLanguage, productName: product.name });
+  console.log('🔵 Chat session:', chatSession);
+  console.log('🔵 Initial message count:', initialMessageCount.current);
+
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -42,25 +47,41 @@ export default function NegotiationChat({
 
   // Fetch AI suggestions when buyer sends a message (for vendor)
   useEffect(() => {
-    // Skip if this is the initial render (chat just opened)
-    if (chatSession.messages.length <= initialMessageCount.current) {
-      return;
-    }
-
+    console.log('🔵 NegotiationChat useEffect triggered');
+    console.log('🔵 userRole:', userRole);
+    console.log('🔵 chatSession.messages.length:', chatSession.messages.length);
+    console.log('🔵 initialMessageCount.current:', initialMessageCount.current);
+    console.log('🔵 chatSession.messages:', chatSession.messages);
+    
     if (userRole === 'vendor' && chatSession.messages.length > 0) {
       const lastMessage = chatSession.messages[chatSession.messages.length - 1];
+      console.log('🔵 Last message:', lastMessage);
+      console.log('� lastProcessedMessageId.current:', lastProcessedMessageId.current);
       
-      // Only fetch if it's a buyer message AND we haven't processed it yet
+      // Fetch suggestions if:
+      // 1. It's a buyer message
+      // 2. We haven't processed this message yet
       if (lastMessage.sender === 'buyer' && lastMessage.id !== lastProcessedMessageId.current) {
+        console.log('� Fetching suggestions for buyer message');
         lastProcessedMessageId.current = lastMessage.id;
         fetchNegotiationSuggestions(lastMessage.text);
+      } else {
+        console.log('🔴 Not fetching suggestions:', {
+          isBuyerMessage: lastMessage.sender === 'buyer',
+          alreadyProcessed: lastMessage.id === lastProcessedMessageId.current,
+          lastMessageId: lastMessage.id
+        });
       }
+    } else {
+      console.log('🔴 Not vendor or no messages');
     }
-  }, [chatSession.messages.length, userRole]); // Only depend on message count, not the array itself
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chatSession.messages, userRole]); // Watch the messages array itself
 
   const fetchNegotiationSuggestions = async (buyerMessage: string) => {
     setLoadingSuggestions(true);
     try {
+      console.log('Fetching negotiation suggestions for:', buyerMessage);
       const response = await fetch('/api/ai/negotiation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -76,9 +97,19 @@ export default function NegotiationChat({
         })
       });
 
+      console.log('Negotiation API response status:', response.status);
       const data = await response.json();
+      console.log('Negotiation API response data:', data);
+      
       if (data.success && data.data) {
         setSuggestions(data.data.suggestions || []);
+      } else {
+        console.error('Negotiation API returned unsuccessful response:', data);
+        setSuggestions([
+          "Thank you for your interest in our products.",
+          "Let me see what I can offer you.",
+          "I appreciate your business."
+        ]);
       }
     } catch (error) {
       console.error('Error fetching negotiation suggestions:', error);
@@ -183,26 +214,32 @@ export default function NegotiationChat({
         </div>
 
         {/* AI Suggestions (for vendor only) */}
-        {userRole === 'vendor' && suggestions.length > 0 && (
+        {userRole === 'vendor' && (loadingSuggestions || suggestions.length > 0) && (
           <div className="border-t border-gray-100 p-4 bg-emerald-50/40 backdrop-blur-sm">
             <div className="flex items-center gap-2 mb-3 px-1">
               <span className="text-xl animate-bounce-gentle">💡</span>
               <p className="text-[10px] font-black text-emerald-700 uppercase tracking-[0.2em]">
-                AI Suggested Replies
+                {loadingSuggestions ? 'Getting AI Suggestions...' : 'AI Suggested Replies'}
               </p>
             </div>
-            <div className="flex flex-col gap-2 max-h-48 overflow-y-auto scrollbar-hide">
-              {suggestions.map((suggestion, index) => (
-                <button
-                  key={index}
-                  onClick={() => handleUseSuggestion(suggestion)}
-                  className="w-full text-left text-xs sm:text-sm px-4 py-3 bg-white/80 border border-emerald-100/50 text-emerald-900 rounded-2xl hover:bg-white hover:border-emerald-300 transition-all duration-200 shadow-sm active:scale-[0.98] leading-relaxed relative group"
-                >
-                  <span className="relative z-10">{suggestion}</span>
-                  <div className="absolute inset-0 bg-emerald-500/0 group-hover:bg-emerald-500/5 rounded-2xl transition-colors"></div>
-                </button>
-              ))}
-            </div>
+            {loadingSuggestions ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2 max-h-48 overflow-y-auto scrollbar-hide">
+                {suggestions.map((suggestion, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleUseSuggestion(suggestion)}
+                    className="w-full text-left text-xs sm:text-sm px-4 py-3 bg-white/80 border border-emerald-100/50 text-emerald-900 rounded-2xl hover:bg-white hover:border-emerald-300 transition-all duration-200 shadow-sm active:scale-[0.98] leading-relaxed relative group"
+                  >
+                    <span className="relative z-10">{suggestion}</span>
+                    <div className="absolute inset-0 bg-emerald-500/0 group-hover:bg-emerald-500/5 rounded-2xl transition-colors"></div>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

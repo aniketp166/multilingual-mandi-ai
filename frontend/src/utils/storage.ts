@@ -145,13 +145,8 @@ export class StorageManager {
   }
 
   public addProduct(product: Omit<Product, 'id' | 'created_at' | 'updated_at'>): Product {
-    console.log('🔵 Storage.addProduct called with:', product);
-    console.log('🔵 Current products in storage:', this.data.products.length);
-    
     const now = new Date().toISOString();
-    const uniqueId = `product_${Date.now()}_${Math.random().toString(36).substr(2, 12)}_${performance.now().toString(36)}`;
-    
-    console.log('🔵 Generated unique ID:', uniqueId);
+    const uniqueId = `product_${Date.now()}_${Math.random().toString(36).substring(2, 14)}_${performance.now().toString(36)}`;
     
     const newProduct: Product = {
       ...product,
@@ -163,7 +158,6 @@ export class StorageManager {
     // Check if product with same ID already exists (shouldn't happen but safety check)
     const existingIndex = this.data.products.findIndex(p => p.id === newProduct.id);
     if (existingIndex !== -1) {
-      console.warn('🔴 Duplicate product ID detected, regenerating...', uniqueId);
       return this.addProduct(product); // Retry with new ID
     }
 
@@ -172,17 +166,19 @@ export class StorageManager {
       p.name.toLowerCase().trim() === product.name.toLowerCase().trim()
     );
     if (existingNameIndex !== -1) {
-      console.warn('🔴 Product with same name already exists:', product.name);
       throw new Error(`Product with name "${product.name}" already exists`);
     }
 
-    console.log('🟢 Adding product to storage array');
     this.data.products.push(newProduct);
     
-    console.log('🟢 Saving to localStorage');
-    this.saveToStorage();
+    const saved = this.saveToStorage();
     
-    console.log('🟢 Product added successfully, new count:', this.data.products.length);
+    if (!saved) {
+      // Rollback the addition
+      this.data.products.pop();
+      throw new Error('Failed to save product to storage');
+    }
+    
     return newProduct;
   }
 
@@ -253,7 +249,7 @@ export class StorageManager {
   public addChatSession(session: Omit<ChatSession, 'id' | 'created_at'>): ChatSession {
     const newSession: ChatSession = {
       ...session,
-      id: `chat_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: `chat_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
       created_at: new Date().toISOString(),
     };
 
