@@ -198,7 +198,7 @@ const PriceSuggestionModal: React.FC<PriceSuggestionModalProps> = ({
                 </div>
                 <div className="bg-gray-50 rounded-xl p-4">
                   <p className="text-sm text-gray-600 leading-relaxed italic font-medium">
-                    "{suggestion.reasoning}"
+n                    &ldquo;{suggestion.reasoning}&rdquo;
                   </p>
                 </div>
 

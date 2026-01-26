@@ -11,7 +11,6 @@ const Navbar: React.FC = () => {
     { name: 'Vendor Dashboard', href: '/dashboard' },
     { name: 'Browse Products', href: '/buyer' },
     { name: 'About', href: '/about' },
-    { name: 'Contact', href: '/contact' },
   ];
 
   const isActive = (href: string) => router.pathname === href;
