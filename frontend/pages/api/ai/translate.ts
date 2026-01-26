@@ -71,7 +71,6 @@ export default async function handler(
 
     let result;
     try {
-      // Using latest gemini-2.5-flash model
       result = await genai.models.generateContent({
         model: 'gemini-2.5-flash',
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
@@ -81,22 +80,27 @@ export default async function handler(
         }
       });
     } catch (error) {
-      console.error('Gemini 2.5 Flash error:', error);
-      throw error;
+      console.error('Gemini error:', error);
+      result = await genai.models.generateContent({
+        model: 'gemini-2.5-flash-lite',
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        config: {
+          temperature: 0.3,
+          maxOutputTokens: 1000,
+        }
+      });
     }
 
-    // Extract text safely from the @google/genai SDK result
+    // Extract text - handle both string and object responses
     let translatedText = '';
-    try {
-      if (result?.candidates?.[0]?.content?.parts?.[0]?.text) {
-        translatedText = result.candidates[0].content.parts[0].text;
-      } else if (typeof result?.text === 'string') {
-        translatedText = result.text;
-      } else {
-        translatedText = JSON.stringify(result);
-      }
-    } catch (textError) {
-      console.error('Error extracting text from result:', textError);
+    if (result?.candidates?.[0]?.content?.parts?.[0]?.text) {
+      translatedText = result.candidates[0].content.parts[0].text;
+    } else if (typeof result?.text === 'string') {
+      translatedText = result.text;
+    } else if (result?.text && typeof result.text === 'object') {
+      // Handle case where text is an object (e.g., {response: "...", tone: "..."})
+      translatedText = (result.text as any).response || (result.text as any).text || JSON.stringify(result.text);
+    } else {
       translatedText = String(result?.text || '');
     }
 

@@ -98,27 +98,29 @@ export default async function handler(
         config: {
           temperature: 0.7,
           maxOutputTokens: 1000,
-          responseMimeType: 'application/json'
         }
       });
     } catch (error) {
-      console.error('Gemini 2.5 Flash error:', error);
-      throw error;
+      console.error('Gemini error:', error);
+      result = await genai.models.generateContent({
+        model: 'gemini-2.5-flash-lite',
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        config: {
+          temperature: 0.7,
+          maxOutputTokens: 1000,
+        }
+      });
     }
 
-    // Extract text safely from the @google/genai SDK result
     let responseText = '';
-    try {
-      if (result?.candidates?.[0]?.content?.parts?.[0]?.text) {
-        responseText = result.candidates[0].content.parts[0].text;
-      } else if (typeof result?.text === 'string') {
-        responseText = result.text;
-      } else {
-        responseText = JSON.stringify(result);
-      }
-    } catch (textError) {
-      console.error('Error extracting text from result:', textError);
-      responseText = JSON.stringify(result);
+    if (result?.candidates?.[0]?.content?.parts?.[0]?.text) {
+      responseText = result.candidates[0].content.parts[0].text;
+    } else if (typeof result?.text === 'string') {
+      responseText = result.text;
+    } else if (result?.text && typeof result.text === 'object') {
+      responseText = (result.text as any).response || (result.text as any).text || JSON.stringify(result.text);
+    } else {
+      responseText = String(result?.text || '');
     }
     
     // Extract JSON (safely handle markdown or raw JSON)

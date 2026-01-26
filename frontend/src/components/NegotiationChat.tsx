@@ -27,16 +27,10 @@ export default function NegotiationChat({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const lastProcessedMessageId = useRef<string | null>(null);
 
-  console.log('🔵 NegotiationChat component rendered');
-  console.log('🔵 Props:', { userRole, userLanguage, productName: product.name });
-  console.log('🔵 Chat session:', chatSession);
-
-  // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatSession.messages]);
 
-  // Lock body scroll when modal is open
   useEffect(() => {
     const originalStyle = window.getComputedStyle(document.body).overflow;
     document.body.style.overflow = 'hidden';
@@ -45,43 +39,21 @@ export default function NegotiationChat({
     };
   }, []);
 
-  // Fetch AI suggestions when buyer sends a message (for vendor)
   useEffect(() => {
-    console.log('🔵 NegotiationChat useEffect triggered');
-    console.log('🔵 userRole:', userRole);
-    console.log('🔵 chatSession.messages.length:', chatSession.messages.length);
-    console.log('🔵 chatSession.messages:', chatSession.messages);
-
     if (userRole === 'vendor' && chatSession.messages.length > 0) {
       const lastMessage = chatSession.messages[chatSession.messages.length - 1];
-      console.log('🔵 Last message:', lastMessage);
-      console.log('🔵 lastProcessedMessageId.current:', lastProcessedMessageId.current);
 
-      // Fetch suggestions if:
-      // 1. It's a buyer message
-      // 2. We haven't processed this message yet
       if (lastMessage.sender === 'buyer' && lastMessage.id !== lastProcessedMessageId.current) {
-        console.log('🟢 Fetching suggestions for buyer message');
         lastProcessedMessageId.current = lastMessage.id;
         fetchNegotiationSuggestions(lastMessage.text);
-      } else {
-        console.log('🔴 Not fetching suggestions:', {
-          isBuyerMessage: lastMessage.sender === 'buyer',
-          alreadyProcessed: lastMessage.id === lastProcessedMessageId.current,
-          lastMessageId: lastMessage.id,
-          lastProcessedId: lastProcessedMessageId.current
-        });
       }
-    } else {
-      console.log('🔴 Not vendor or no messages');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chatSession.messages, userRole]); // Watch the messages array itself
+  }, [chatSession.messages, userRole]);
 
   const fetchNegotiationSuggestions = async (buyerMessage: string) => {
     setLoadingSuggestions(true);
     try {
-      console.log('Fetching negotiation suggestions for:', buyerMessage);
       const response = await fetch('/api/ai/negotiation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -97,14 +69,11 @@ export default function NegotiationChat({
         })
       });
 
-      console.log('Negotiation API response status:', response.status);
       const data = await response.json();
-      console.log('Negotiation API response data:', data);
 
       if (data.success && data.data) {
         setSuggestions(data.data.suggestions || []);
       } else {
-        console.error('Negotiation API returned unsuccessful response:', data);
         setSuggestions([
           "Thank you for your interest in our products.",
           "Let me see what I can offer you.",
@@ -189,7 +158,6 @@ export default function NegotiationChat({
           </div>
         </div>
 
-        {/* Messages Area */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 bg-gray-50 scrollbar-hide min-h-0">
           {chatSession.messages.length === 0 ? (
             <div className="flex items-center justify-center h-full">
@@ -221,13 +189,11 @@ export default function NegotiationChat({
                       >
                         <p className="text-sm sm:text-base leading-relaxed break-words">
                           {(() => {
-                            const textToDisplay = displayingOriginal && message.translated_text
-                              ? message.text
-                              : message.translated_text || message.text;
+                            const textToDisplay = isCurrentUser
+                              ? (displayingOriginal ? (message.translated_text || message.text) : message.text)
+                              : (displayingOriginal ? message.text : (message.translated_text || message.text));
 
-                            // Ensure we're rendering a string, not an object
                             if (typeof textToDisplay === 'object') {
-                              console.error('Message text is an object:', textToDisplay);
                               return JSON.stringify(textToDisplay);
                             }
                             return textToDisplay;
@@ -241,7 +207,10 @@ export default function NegotiationChat({
                             onClick={() => toggleShowOriginal(message.id)}
                             className="text-[10px] sm:text-xs font-bold text-emerald-600 hover:text-emerald-700 uppercase tracking-wider"
                           >
-                            {displayingOriginal ? 'Show translation' : 'Show original'}
+                            {isCurrentUser
+                              ? (displayingOriginal ? 'Show original' : 'Show translation')
+                              : (displayingOriginal ? 'Show translation' : 'Show original')
+                            }
                           </button>
                         )}
                       </div>
@@ -254,7 +223,6 @@ export default function NegotiationChat({
           )}
         </div>
 
-        {/* AI Suggestions (for vendor only) */}
         {userRole === 'vendor' && (loadingSuggestions || suggestions.length > 0) && (
           <div className="border-t border-gray-100 p-4 bg-emerald-50/40 backdrop-blur-sm max-h-64 overflow-y-auto flex-shrink-0">
             <div className="flex items-center gap-2 mb-3 px-1">
@@ -288,7 +256,6 @@ export default function NegotiationChat({
           </div>
         )}
 
-        {/* Input Area */}
         <div className="border-t border-gray-100 p-4 sm:p-6 bg-white sm:rounded-b-2xl shadow-[0_-4px_20px_0_rgba(0,0,0,0.03)]">
           <div className="flex items-center gap-3">
             <div className="flex-1 relative">

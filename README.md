@@ -6,8 +6,9 @@ A web platform empowering India's local vendors with AI-driven multilingual comm
 
 **🌐 Live Demo:** [https://mandi-ai.aniketppatil.com/](https://mandi-ai.aniketppatil.com/)
 
-**Demo live recording:** [AI Price Suggestion]
-https://assets.aniketppatil.com/kiro-challenge/ai_suggested_real_pricing.mp4
+**📹 Demo Videos:**
+- [AI Price Suggestion](https://assets.aniketppatil.com/kiro-challenge/ai_suggested_real_pricing.mp4)
+- [Message Translation](https://assets.aniketppatil.com/kiro-challenge/message_translate.mp4)
 
 ## 🎯 Challenge Overview
 

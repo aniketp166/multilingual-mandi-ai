@@ -57,7 +57,6 @@ export default async function handler(
     const apiKey = process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
-      // Return mock response for development
       const mockResponse: NegotiationResponse = {
         suggestions: [
           "Thank you for your interest! I can offer a competitive price for this quality product.",
@@ -83,72 +82,73 @@ export default async function handler(
 
     const prompt = `You are helping a vendor in an Indian marketplace negotiate with a buyer. 
 
-    Product: ${product.name} (₹${product.price}/kg, ${product.quantity}kg available)
-    Conversation so far:
-    ${conversationHistory}
-    
-    Latest buyer message: "${buyer_message}"
-    
-    Generate 3 professional, culturally appropriate responses for the vendor in ${vendor_language}. 
-    The responses should be:
-    1. Friendly and professional
-    2. Aimed at closing the deal
-    3. Respectful of Indian business culture
-    
-    Format as JSON:
-    {
-      "suggestions": ["response1", "response2", "response3"],
-      "tone": "friendly|professional|firm"
-    }`;
+Product: ${product.name} (₹${product.price}/kg, ${product.quantity}kg available)
+Conversation so far:
+${conversationHistory}
+
+Latest buyer message: "${buyer_message}"
+
+Generate 3 professional, culturally appropriate responses for the vendor in ${vendor_language}. 
+The responses should be:
+1. Friendly and professional
+2. Aimed at closing the deal
+3. Respectful of Indian business culture
+
+Return ONLY a JSON object with this exact format:
+{
+  "suggestions": ["response1", "response2", "response3"],
+  "tone": "friendly"
+}`;
 
     let result;
     try {
-      // Using latest gemini-2.5-flash model
       result = await client.models.generateContent({
         model: 'gemini-2.5-flash',
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
         config: {
           temperature: 0.7,
           maxOutputTokens: 1000,
-          responseMimeType: 'application/json'
         }
       });
     } catch (error) {
-      console.error('Gemini 2.5 Flash error:', error);
-      throw error;
+      console.error('Gemini error:', error);
+      result = await client.models.generateContent({
+        model: 'gemini-2.5-flash-lite',
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        config: {
+          temperature: 0.7,
+          maxOutputTokens: 1000,
+        }
+      });
     }
 
-    // Extract text safely from the @google/genai SDK result
     let responseText = '';
-    try {
-      // Try to get text using the standard candidate path
-      if (result?.candidates?.[0]?.content?.parts?.[0]?.text) {
-        responseText = result.candidates[0].content.parts[0].text;
-      } else if (typeof result?.text === 'string') {
-        responseText = result.text;
-      } else {
-        responseText = JSON.stringify(result);
-      }
-    } catch (textError) {
-      console.error('Error extracting text from result:', textError);
-      responseText = JSON.stringify(result);
+    if (result?.candidates?.[0]?.content?.parts?.[0]?.text) {
+      responseText = result.candidates[0].content.parts[0].text;
+    } else if (typeof result?.text === 'string') {
+      responseText = result.text;
+    } else if (result?.text && typeof result.text === 'object') {
+      responseText = (result.text as any).response || (result.text as any).text || JSON.stringify(result.text);
+    } else {
+      responseText = String(result?.text || '');
     }
     
-    // Extract JSON from response (handle markdown code blocks)
-    let jsonText = responseText;
+    let jsonText = responseText.trim();
     const jsonMatch = responseText.match(/```json\n([\s\S]*?)\n```/) || 
-                      responseText.match(/```\n([\s\S]*?)\n```/) ||
-                      responseText.match(/{[\s\S]*}/);
+                      responseText.match(/```\n([\s\S]*?)\n```/);
     
-    if (jsonMatch) {
-      jsonText = jsonMatch[0]; // If it matched the whole object, use it
-      if (jsonMatch[1]) jsonText = jsonMatch[1]; // If it matched the group, use that
+    if (jsonMatch && jsonMatch[1]) {
+      jsonText = jsonMatch[1].trim();
+    } else {
+      const objectMatch = responseText.match(/\{[\s\S]*\}/);
+      if (objectMatch) {
+        jsonText = objectMatch[0];
+      }
     }
     
     try {
       const parsedResponse = JSON.parse(jsonText);
       
-      // CRITICAL: Ensure suggestions are strings! 
       const rawSuggestions = parsedResponse.suggestions || [];
       const sanitizedSuggestions = Array.isArray(rawSuggestions) 
         ? rawSuggestions.map((s: any) => {
@@ -157,8 +157,8 @@ export default async function handler(
               return s.response || s.text || s.suggestion || JSON.stringify(s);
             }
             return String(s);
-          })
-        : ["Thank you for your interest in our products."];
+          }).filter((s: string) => s && s.length > 0)
+        : [];
 
       const negotiationResponse: NegotiationResponse = {
         suggestions: sanitizedSuggestions.length > 0 ? sanitizedSuggestions : [
@@ -176,14 +176,13 @@ export default async function handler(
       });
     } catch (parseError) {
       console.error('Failed to parse negotiation response:', parseError);
-      console.log('Original response text:', responseText);
+      console.error('Response text was:', responseText);
       throw new Error('Failed to parse negotiation response');
     }
 
   } catch (error) {
     console.error('Negotiation API error:', error);
     
-    // Fallback to mock response on error
     const mockResponse: NegotiationResponse = {
       suggestions: [
         "Thank you for your interest in our products.",

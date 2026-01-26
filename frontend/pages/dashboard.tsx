@@ -63,6 +63,27 @@ const Dashboard: React.FC = () => {
     return () => clearInterval(pollInterval);
   }, [activeChatSession]);
 
+  // Poll for new chat sessions even when no chat is active
+  useEffect(() => {
+    const pollInterval = setInterval(() => {
+      const allSessions = storage.getChatSessions();
+      const activeSessions = allSessions.filter(s => s.status === 'active' && s.messages.length > 0);
+      
+      // Check if there are new messages in any session
+      const hasUpdates = activeSessions.some(newSession => {
+        const oldSession = chatSessions.find(s => s.id === newSession.id);
+        return !oldSession || oldSession.messages.length !== newSession.messages.length;
+      });
+      
+      if (hasUpdates || activeSessions.length !== chatSessions.length) {
+        console.log('🔄 Chat sessions list updated');
+        setChatSessions(activeSessions);
+      }
+    }, 3000); // Poll every 3 seconds
+
+    return () => clearInterval(pollInterval);
+  }, [chatSessions]);
+
   const handleLanguageChange = (newLanguage: string) => {
     setVendorLanguage(newLanguage);
     storage.updateUserPreferences({ language: newLanguage });
