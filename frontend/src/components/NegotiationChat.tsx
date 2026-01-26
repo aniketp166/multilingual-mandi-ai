@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { ChatSession, Message, Product } from '../types';
+import { ChatSession, Product } from '../types';
 
 interface NegotiationChatProps {
   chatSession: ChatSession;
@@ -74,7 +74,16 @@ export default function NegotiationChat({
       const data = await response.json();
 
       if (data.success && data.data) {
-        setSuggestions(data.data.suggestions || []);
+        const rawSuggestions = data.data.suggestions || [];
+        const sanitized = rawSuggestions.map((s: unknown) => {
+          if (typeof s === 'string') return s;
+          if (s && typeof s === 'object') {
+            const obj = s as Record<string, unknown>;
+            return String(obj.response || obj.text || obj.suggestion || JSON.stringify(s));
+          }
+          return String(s || '');
+        });
+        setSuggestions(sanitized);
       } else {
         setSuggestions([
           "Thank you for your interest in our products.",
@@ -206,7 +215,7 @@ export default function NegotiationChat({
                         {message.translated_text && (
                           <button
                             onClick={() => toggleShowOriginal(message.id)}
-                            className="text-[10px] sm:text-xs font-bold text-emerald-600 hover:text-emerald-700 uppercase tracking-wider"
+                            className="px-2 py-0.5 bg-emerald-50 text-[10px] sm:text-xs font-bold text-emerald-600 hover:bg-emerald-100 rounded-full transition-colors uppercase tracking-wider border border-emerald-100 shadow-sm"
                           >
                             {isCurrentUser
                               ? (displayingOriginal ? 'Show original' : 'Show translation')
@@ -241,13 +250,11 @@ export default function NegotiationChat({
                 {suggestions.map((suggestion, index) => (
                   <button
                     key={index}
-                    onClick={() => handleUseSuggestion(typeof suggestion === 'string' ? suggestion : (suggestion as any).response || JSON.stringify(suggestion))}
+                    onClick={() => handleUseSuggestion(suggestion)}
                     className="w-full text-left text-xs sm:text-sm px-4 py-3 bg-white/80 border border-emerald-100/50 text-emerald-900 rounded-2xl hover:bg-white hover:border-emerald-300 transition-all duration-200 shadow-sm active:scale-[0.98] leading-relaxed relative group"
                   >
                     <span className="relative z-10">
-                      {typeof suggestion === 'string'
-                        ? suggestion
-                        : (suggestion as any).response || (suggestion as any).text || JSON.stringify(suggestion)}
+                      {suggestion}
                     </span>
                     <div className="absolute inset-0 bg-emerald-500/0 group-hover:bg-emerald-500/5 rounded-2xl transition-colors"></div>
                   </button>

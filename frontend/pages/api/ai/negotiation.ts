@@ -141,10 +141,11 @@ Return as JSON:
       
       const rawSuggestions = parsedResponse.suggestions || [];
       const sanitizedSuggestions = Array.isArray(rawSuggestions) 
-        ? rawSuggestions.map((s: any) => {
+        ? rawSuggestions.map((s: unknown) => {
             if (typeof s === 'string') return s;
             if (typeof s === 'object' && s !== null) {
-              return s.response || s.text || s.suggestion || JSON.stringify(s);
+              const obj = s as Record<string, unknown>;
+              return String(obj.response || obj.text || obj.suggestion || JSON.stringify(s));
             }
             return String(s);
           }).filter((s: string) => s && s.length > 0)

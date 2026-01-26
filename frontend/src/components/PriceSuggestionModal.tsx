@@ -163,8 +163,14 @@ const PriceSuggestionModal: React.FC<PriceSuggestionModalProps> = ({
                   </div>
 
                   {/* Current Price Marker */}
-                  <div className="absolute top-0 flex flex-col items-center transition-all duration-500" style={{ left: '50%' }}>
-                    <div className="w-1 h-6 bg-gray-900/10 rounded-full"></div>
+                  <div
+                    className="absolute top-0 flex flex-col items-center transition-all duration-700 ease-out"
+                    style={{
+                      left: `${Math.min(Math.max(((product.price - suggestion.min_price) / (suggestion.max_price - suggestion.min_price)) * 100, 0), 100)}%`
+                    }}
+                  >
+                    <div className="w-1.5 h-6 bg-gray-900 rounded-full shadow-sm"></div>
+                    <div className="text-[8px] font-black text-gray-900 mt-1 uppercase">Current</div>
                   </div>
 
                   <div className="mt-4 flex justify-between">
@@ -197,9 +203,9 @@ const PriceSuggestionModal: React.FC<PriceSuggestionModalProps> = ({
                     </p>
                   </div>
                 </div>
-                <div className="bg-gray-50 rounded-xl p-4">
+                <div className="bg-gray-50 rounded-xl p-4 border border-gray-100/50">
                   <p className="text-sm text-gray-600 leading-relaxed italic font-medium">
-n                    &ldquo;{suggestion.reasoning}&rdquo;
+                    &ldquo;{suggestion.reasoning}&rdquo;
                   </p>
                 </div>
 

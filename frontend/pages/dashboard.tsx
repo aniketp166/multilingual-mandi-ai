@@ -667,7 +667,7 @@ const Dashboard: React.FC = () => {
                         </span>
                       </div>
                       <p className="text-sm text-gray-600 line-clamp-1 italic">
-                        "{lastMessage.text}"
+                        &quot;{lastMessage.text}&quot;
                       </p>
                     </div>
                   );
