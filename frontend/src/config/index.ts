@@ -1,19 +1,13 @@
-// Configuration management for Multilingual Mandi Frontend
+// Configuration management for Multilingual Mandi Frontend (Frontend-Only)
 // All environment variables are centralized here
 
 interface AppConfig {
-  // API Configuration
-  api: {
-    baseUrl: string;
-    wsBaseUrl: string;
-    timeout: number;
-    maxRetries: number;
-    retryDelay: number;
-  };
-  
   // AI Services
   ai: {
     geminiApiKey?: string;
+    model: string;
+    temperature: number;
+    maxTokens: number;
   };
   
   // App Information
@@ -75,16 +69,11 @@ const getEnvNumber = (key: string, fallback: number = 0): number => {
 
 // Main configuration object
 export const config: AppConfig = {
-  api: {
-    baseUrl: getEnvVar('NEXT_PUBLIC_API_BASE_URL', 'http://localhost:8001'),
-    wsBaseUrl: getEnvVar('NEXT_PUBLIC_WS_BASE_URL', 'ws://localhost:8001'),
-    timeout: getEnvNumber('NEXT_PUBLIC_API_TIMEOUT', 10000), // 10 seconds
-    maxRetries: getEnvNumber('NEXT_PUBLIC_MAX_RETRIES', 3),
-    retryDelay: getEnvNumber('NEXT_PUBLIC_RETRY_DELAY', 1000),
-  },
-  
   ai: {
     geminiApiKey: getEnvVar('NEXT_PUBLIC_GEMINI_API_KEY'),
+    model: getEnvVar('NEXT_PUBLIC_GEMINI_MODEL', 'gemini-pro'),
+    temperature: getEnvNumber('NEXT_PUBLIC_GEMINI_TEMPERATURE', 0.7),
+    maxTokens: getEnvNumber('NEXT_PUBLIC_GEMINI_MAX_TOKENS', 1000),
   },
   
   app: {
@@ -119,46 +108,18 @@ export const config: AppConfig = {
   },
 };
 
-// API Endpoints - constructed from base URL
-export const apiEndpoints = {
-  // Translation endpoints
-  translate: `${config.api.baseUrl}/api/translate`,
-  
-  // Price discovery endpoints
-  priceDiscovery: `${config.api.baseUrl}/api/price-suggest`,
-  
-  // Negotiation endpoints
-  negotiate: `${config.api.baseUrl}/api/negotiate`,
-  
-  // Health check
-  health: `${config.api.baseUrl}/health`,
-  
-  // Version info
-  version: `${config.api.baseUrl}/version`,
-  
-  // WebSocket endpoint
-  websocket: `${config.api.wsBaseUrl}/ws`,
-};
-
 // Validation function to check if required config is present
 export const validateConfig = (): { isValid: boolean; errors: string[] } => {
   const errors: string[] = [];
   
-  // Check required API URL
-  if (!config.api.baseUrl) {
-    errors.push('NEXT_PUBLIC_API_BASE_URL is required');
-  }
-  
-  // Check if API URL is reachable format
-  try {
-    new URL(config.api.baseUrl);
-  } catch {
-    errors.push('NEXT_PUBLIC_API_BASE_URL must be a valid URL');
-  }
-  
-  // Warn about missing AI key in production
+  // Check if Gemini API key is present in production
   if (config.app.environment === 'production' && !config.ai.geminiApiKey) {
-    console.warn('NEXT_PUBLIC_GEMINI_API_KEY is not set - AI features may not work');
+    errors.push('NEXT_PUBLIC_GEMINI_API_KEY is required for production');
+  }
+  
+  // Warn about missing AI key in development
+  if (config.app.environment === 'development' && !config.ai.geminiApiKey) {
+    console.warn('NEXT_PUBLIC_GEMINI_API_KEY is not set - AI features will use mock responses');
   }
   
   return {
@@ -170,21 +131,24 @@ export const validateConfig = (): { isValid: boolean; errors: string[] } => {
 // Development helper to log configuration (excluding sensitive data)
 export const logConfig = (): void => {
   if (config.app.environment === 'development' && config.features.debugLogs) {
-    console.group('🔧 Multilingual Mandi Configuration');
-    console.log('API Base URL:', config.api.baseUrl);
-    console.log('WebSocket URL:', config.api.wsBaseUrl);
+    console.group('🔧 Multilingual Mandi Configuration (Frontend-Only)');
     console.log('App Version:', config.app.version);
     console.log('Environment:', config.app.environment);
     console.log('Features:', config.features);
     console.log('Storage Config:', config.storage);
     console.log('Defaults:', config.defaults);
     console.log('UI Config:', config.ui);
-    console.log('AI Key Present:', !!config.ai.geminiApiKey);
+    console.log('AI Config:', { 
+      model: config.ai.model, 
+      temperature: config.ai.temperature, 
+      maxTokens: config.ai.maxTokens,
+      keyPresent: !!config.ai.geminiApiKey 
+    });
     console.groupEnd();
   }
 };
 
 // Export individual config sections for convenience
-export const { api: apiConfig, app: appConfig, features, storage: storageConfig, defaults, ui: uiConfig } = config;
+export const { ai: aiConfig, app: appConfig, features, storage: storageConfig, defaults, ui: uiConfig } = config;
 
 export default config;

@@ -1,8 +1,8 @@
-# Design Document: Multilingual Mandi - Vendor Assistant
+# Design Document: Multilingual Mandi - Vendor Assistant (Frontend-Only)
 
 ## Overview
 
-The Multilingual Mandi - Vendor Assistant is a modern web application built with React and Tailwind CSS that enables vendors to manage products, communicate across language barriers, and negotiate effectively with AI assistance. The system prioritizes mobile-first responsive design with an intuitive, visually appealing interface.
+The Multilingual Mandi - Vendor Assistant is a modern frontend-only web application built with Next.js, TypeScript, and Tailwind CSS. It enables vendors to manage products, communicate across language barriers, and negotiate effectively with direct Gemini AI integration. The system uses LocalStorage for data persistence and prioritizes mobile-first responsive design with an intuitive, visually appealing interface.
 
 ## Architecture
 
@@ -10,41 +10,35 @@ The Multilingual Mandi - Vendor Assistant is a modern web application built with
 
 ```mermaid
 graph TB
-    subgraph "Frontend (React + Tailwind)"
+    subgraph "Frontend (Next.js + TypeScript)"
         UI[User Interface]
         State[State Management]
-        Storage[LocalStorage]
-    end
-    
-    subgraph "Backend (FastAPI)"
-        API[API Router]
-        Translation[Translation Service]
-        Pricing[Price Discovery]
-        Negotiation[Negotiation Assistant]
+        Storage[LocalStorage Manager]
+        AI[AI Service Layer]
     end
     
     subgraph "External Services"
-        Gemini[Gemini GenAI API]
+        Gemini[Google Gemini API]
+    end
+    
+    subgraph "Deployment"
+        Vercel[Vercel Platform]
     end
     
     UI --> State
     State --> Storage
-    UI --> API
-    API --> Translation
-    API --> Pricing
-    API --> Negotiation
-    Translation --> Gemini
-    Pricing --> Gemini
-    Negotiation --> Gemini
+    UI --> AI
+    AI --> Gemini
+    UI --> Vercel
 ```
 
 ### Technology Stack
 
-- **Frontend**: React 18 with TypeScript, Tailwind CSS for styling
-- **Backend**: Python FastAPI with async/await patterns
-- **AI Services**: Google Gemini GenAI API for translation and suggestions
-- **Storage**: Browser LocalStorage for demo persistence
-- **Communication**: REST API with JSON payloads
+- **Frontend**: Next.js 16.1.1 with TypeScript, Tailwind CSS 3.4.17
+- **AI Services**: Google Gemini API via @google/genai package
+- **Storage**: Browser LocalStorage for client-side persistence
+- **Deployment**: Vercel static/serverless hosting
+- **Communication**: Direct API calls to Gemini with client-side state management
 
 ## Components and Interfaces
 
@@ -63,7 +57,7 @@ interface VendorDashboardProps {
 **Responsibilities:**
 - Display product grid with cards showing name, quantity, price
 - Provide "Add Product" floating action button
-- Handle product CRUD operations
+- Handle product CRUD operations with LocalStorage
 - Show price suggestion button for each product
 
 #### 2. ProductCard Component
@@ -80,6 +74,7 @@ interface ProductCardProps {
 - Display product information in card format
 - Provide quick action buttons (edit, delete, price suggest)
 - Show visual indicators for product status
+- Mobile-optimized touch interactions
 
 #### 3. AddProductModal Component
 ```typescript
@@ -95,7 +90,7 @@ interface AddProductModalProps {
 - Modal form for adding new products
 - Dropdown for sample products (Tomato, Onion, Potato, Banana, Apple)
 - Input validation and error display
-- Price suggestion integration
+- Integration with LocalStorage persistence
 
 #### 4. NegotiationChat Component
 ```typescript
@@ -111,7 +106,7 @@ interface NegotiationChatProps {
 - Real-time chat interface with message bubbles
 - Display translated messages with original text toggle
 - Show AI reply suggestions as quick action buttons
-- Handle message sending and receiving
+- Store chat history in LocalStorage
 
 #### 5. PriceSuggestionModal Component
 ```typescript
@@ -125,95 +120,36 @@ interface PriceSuggestionModalProps {
 
 **Responsibilities:**
 - Display price range with visual indicators
-- Show reasoning for price suggestions
+- Show AI reasoning for price suggestions
 - Allow price acceptance or manual adjustment
+- Handle Gemini API integration for pricing
 
-### Backend API Endpoints
+### AI Service Layer
 
-#### 1. Translation Endpoint
-```python
-@app.post("/translate")
-async def translate_text(request: TranslationRequest) -> TranslationResponse:
-    """
-    Translates text between languages using Gemini API
-    """
-```
-
-**Request Schema:**
+#### 1. Gemini Translation Service
 ```typescript
-interface TranslationRequest {
-  text: string;
-  source_language: string;
-  target_language: string;
+interface TranslationService {
+  translateText(text: string, sourceLang: string, targetLang: string): Promise<TranslationResponse>;
+  detectLanguage(text: string): Promise<string>;
+  getCachedTranslation(text: string, sourceLang: string, targetLang: string): TranslationResponse | null;
 }
 ```
 
-**Response Schema:**
+#### 2. Gemini Price Discovery Service
 ```typescript
-interface TranslationResponse {
-  translated_text: string;
-  original_text: string;
-  source_language: string;
-  target_language: string;
-  confidence: number;
+interface PriceDiscoveryService {
+  suggestPrice(product: ProductInput, context?: MarketContext): Promise<PriceSuggestionResponse>;
+  getMarketTrend(productName: string): Promise<MarketTrend>;
+  getFallbackPrice(productCategory: string): PriceSuggestionResponse;
 }
 ```
 
-#### 2. Price Suggestion Endpoint
-```python
-@app.post("/price-suggest")
-async def suggest_price(request: PriceSuggestionRequest) -> PriceSuggestionResponse:
-    """
-    Provides AI-powered price suggestions based on product details
-    """
-```
-
-**Request Schema:**
+#### 3. Gemini Negotiation Assistant
 ```typescript
-interface PriceSuggestionRequest {
-  product_name: string;
-  quantity: number;
-  current_price?: number;
-  location?: string;
-}
-```
-
-**Response Schema:**
-```typescript
-interface PriceSuggestionResponse {
-  min_price: number;
-  max_price: number;
-  recommended_price: number;
-  reasoning: string;
-  market_trend: "rising" | "falling" | "stable";
-}
-```
-
-#### 3. Negotiation Assistance Endpoint
-```python
-@app.post("/negotiate")
-async def get_negotiation_suggestions(request: NegotiationRequest) -> NegotiationResponse:
-    """
-    Generates contextual reply suggestions for negotiations
-    """
-```
-
-**Request Schema:**
-```typescript
-interface NegotiationRequest {
-  product: Product;
-  conversation_history: Message[];
-  buyer_message: string;
-  vendor_language: string;
-}
-```
-
-**Response Schema:**
-```typescript
-interface NegotiationResponse {
-  suggestions: string[];
-  context: string;
-  tone: "friendly" | "professional" | "firm";
+interface NegotiationService {
+  generateSuggestions(context: NegotiationContext): Promise<string[]>;
+  analyzeMessage(message: string): Promise<MessageAnalysis>;
+  getFallbackResponses(): string[];
 }
 ```
 
@@ -267,6 +203,14 @@ interface PriceSuggestion {
   market_trend: "rising" | "falling" | "stable";
   confidence: number;
 }
+
+interface TranslationResponse {
+  translated_text: string;
+  original_text: string;
+  source_language: string;
+  target_language: string;
+  confidence: number;
+}
 ```
 
 ### LocalStorage Schema
@@ -280,7 +224,84 @@ interface LocalStorageData {
     location?: string;
   };
   chat_sessions: ChatSession[];
+  translation_cache: Record<string, TranslationResponse>;
   version: string;
+}
+```
+
+## AI Integration Architecture
+
+### Gemini API Integration
+
+```typescript
+// AI Service Configuration
+interface GeminiConfig {
+  apiKey: string;
+  model: string;
+  temperature: number;
+  maxTokens: number;
+}
+
+// Service Implementation
+class GeminiAIService {
+  private client: GoogleGenerativeAI;
+  
+  constructor(config: GeminiConfig) {
+    this.client = new GoogleGenerativeAI(config.apiKey);
+  }
+  
+  async translateText(text: string, targetLang: string): Promise<TranslationResponse> {
+    const model = this.client.getGenerativeModel({ model: "gemini-pro" });
+    const prompt = `Translate the following text to ${targetLang}: "${text}"`;
+    
+    try {
+      const result = await model.generateContent(prompt);
+      return {
+        translated_text: result.response.text(),
+        original_text: text,
+        source_language: "auto-detect",
+        target_language: targetLang,
+        confidence: 0.95
+      };
+    } catch (error) {
+      throw new Error(`Translation failed: ${error.message}`);
+    }
+  }
+  
+  async suggestPrice(product: ProductInput): Promise<PriceSuggestion> {
+    const model = this.client.getGenerativeModel({ model: "gemini-pro" });
+    const prompt = `Suggest a fair market price for ${product.quantity}kg of ${product.name} in Indian markets. Current asking price is ₹${product.price}. Provide min, max, and recommended prices with reasoning.`;
+    
+    try {
+      const result = await model.generateContent(prompt);
+      // Parse AI response and return structured data
+      return this.parsePriceSuggestion(result.response.text(), product);
+    } catch (error) {
+      return this.getFallbackPrice(product);
+    }
+  }
+}
+```
+
+### Error Handling and Fallbacks
+
+```typescript
+interface AIServiceWithFallback {
+  primary: GeminiAIService;
+  fallback: FallbackService;
+  cache: CacheService;
+  
+  async executeWithFallback<T>(
+    operation: () => Promise<T>,
+    fallbackOperation: () => T
+  ): Promise<T> {
+    try {
+      return await operation();
+    } catch (error) {
+      console.warn('AI service failed, using fallback:', error);
+      return fallbackOperation();
+    }
+  }
 }
 ```
 
@@ -318,8 +339,8 @@ interface LocalStorageData {
 ```css
 /* Mobile-first card design */
 .product-card {
-  @apply bg-white rounded-lg shadow-md border border-gray-200 p-4 space-y-3;
-  @apply hover:shadow-lg transition-shadow duration-200;
+  @apply bg-white rounded-2xl shadow-lg border border-gray-100 p-6 space-y-4;
+  @apply hover:shadow-2xl hover:-translate-y-2 transition-all duration-300;
 }
 
 .product-card-header {
@@ -327,18 +348,18 @@ interface LocalStorageData {
 }
 
 .product-card-actions {
-  @apply flex space-x-2 mt-3;
+  @apply flex space-x-3 mt-4;
 }
 ```
 
 #### Chat Interface
 ```css
 .chat-container {
-  @apply flex flex-col h-screen max-h-96 bg-gray-50 rounded-lg;
+  @apply flex flex-col h-screen max-h-96 bg-gray-50 rounded-2xl;
 }
 
 .message-bubble {
-  @apply max-w-xs lg:max-w-md px-4 py-2 rounded-lg;
+  @apply max-w-xs lg:max-w-md px-4 py-3 rounded-xl;
 }
 
 .message-vendor {
@@ -346,51 +367,28 @@ interface LocalStorageData {
 }
 
 .message-buyer {
-  @apply bg-white text-gray-900 mr-auto border;
+  @apply bg-white text-gray-900 mr-auto border border-gray-200;
 }
 ```
 
 #### Buttons and Actions
 ```css
 .btn-primary {
-  @apply bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2 px-4 rounded-lg;
-  @apply transition-colors duration-200 focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2;
+  @apply bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700;
+  @apply text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl;
+  @apply transition-all duration-200 transform hover:-translate-y-1;
 }
 
 .btn-secondary {
-  @apply bg-white hover:bg-gray-50 text-gray-700 font-medium py-2 px-4 rounded-lg border border-gray-300;
-  @apply transition-colors duration-200 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2;
+  @apply bg-white hover:bg-gray-50 text-gray-700 font-medium py-3 px-6 rounded-xl;
+  @apply border-2 border-gray-200 hover:border-emerald-300 transition-all duration-200;
 }
 
 .floating-action-btn {
-  @apply fixed bottom-6 right-6 bg-emerald-600 hover:bg-emerald-700 text-white p-4 rounded-full shadow-lg;
-  @apply transition-all duration-200 hover:scale-105 focus:ring-4 focus:ring-emerald-500 focus:ring-opacity-50;
+  @apply fixed bottom-6 right-6 bg-gradient-to-r from-emerald-500 to-emerald-600;
+  @apply text-white p-4 rounded-full shadow-2xl hover:shadow-3xl;
+  @apply transition-all duration-300 hover:scale-110 z-40;
 }
-```
-
-### Mobile-First Layout
-
-#### Dashboard Layout
-```jsx
-<div className="min-h-screen bg-gray-50">
-  {/* Header */}
-  <header className="bg-white shadow-sm border-b border-gray-200 px-4 py-3">
-    <h1 className="text-xl font-bold text-gray-900">Mandi Assistant</h1>
-  </header>
-  
-  {/* Main Content */}
-  <main className="p-4">
-    {/* Product Grid */}
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {/* Product cards */}
-    </div>
-  </main>
-  
-  {/* Floating Add Button */}
-  <button className="floating-action-btn">
-    <PlusIcon className="w-6 h-6" />
-  </button>
-</div>
 ```
 
 ## State Management
@@ -416,37 +414,133 @@ interface AppState {
     currentSession: ChatSession | null;
     suggestions: string[];
   };
+  ai: {
+    translationCache: Map<string, TranslationResponse>;
+    priceCache: Map<string, PriceSuggestion>;
+    isOnline: boolean;
+  };
 }
 ```
 
-### State Management Patterns
-
-**Local State**: Use `useState` for component-specific state
-**Shared State**: Use `useContext` for app-wide state like user preferences
-**Async State**: Use custom hooks for API calls with loading/error states
+### Custom Hooks for AI Integration
 
 ```typescript
-// Custom hook for API calls
-function useApiCall<T>(apiFunction: () => Promise<T>) {
-  const [data, setData] = useState<T | null>(null);
+// Hook for Gemini AI operations
+function useGeminiAI() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  const execute = useCallback(async () => {
+  const translateText = useCallback(async (text: string, targetLang: string) => {
     setLoading(true);
     setError(null);
     try {
-      const result = await apiFunction();
-      setData(result);
+      const result = await geminiService.translateText(text, targetLang);
+      return result;
     } catch (err) {
       setError(err.message);
+      return null;
     } finally {
       setLoading(false);
     }
-  }, [apiFunction]);
+  }, []);
   
-  return { data, loading, error, execute };
+  const suggestPrice = useCallback(async (product: ProductInput) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await geminiService.suggestPrice(product);
+      return result;
+    } catch (err) {
+      setError(err.message);
+      return getFallbackPrice(product);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+  
+  return { translateText, suggestPrice, loading, error };
 }
+
+// Hook for LocalStorage operations
+function useLocalStorage<T>(key: string, initialValue: T) {
+  const [storedValue, setStoredValue] = useState<T>(() => {
+    try {
+      const item = window.localStorage.getItem(key);
+      return item ? JSON.parse(item) : initialValue;
+    } catch (error) {
+      console.error(`Error reading localStorage key "${key}":`, error);
+      return initialValue;
+    }
+  });
+  
+  const setValue = useCallback((value: T | ((val: T) => T)) => {
+    try {
+      const valueToStore = value instanceof Function ? value(storedValue) : value;
+      setStoredValue(valueToStore);
+      window.localStorage.setItem(key, JSON.stringify(valueToStore));
+    } catch (error) {
+      console.error(`Error setting localStorage key "${key}":`, error);
+    }
+  }, [key, storedValue]);
+  
+  return [storedValue, setValue] as const;
+}
+```
+
+## Deployment Configuration
+
+### Vercel Configuration
+
+```json
+// vercel.json
+{
+  "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "installCommand": "npm install",
+  "env": {
+    "NEXT_PUBLIC_GEMINI_API_KEY": "@gemini-api-key"
+  },
+  "functions": {
+    "pages/api/**/*.js": {
+      "runtime": "nodejs18.x"
+    }
+  }
+}
+```
+
+### Environment Variables
+
+```bash
+# .env.local (development)
+NEXT_PUBLIC_GEMINI_API_KEY=your_gemini_api_key_here
+NEXT_PUBLIC_APP_ENV=development
+
+# .env.production (Vercel)
+NEXT_PUBLIC_GEMINI_API_KEY=production_gemini_api_key
+NEXT_PUBLIC_APP_ENV=production
+```
+
+### Build Optimization
+
+```javascript
+// next.config.js
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  reactStrictMode: true,
+  swcMinify: true,
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
+  },
+  experimental: {
+    optimizeCss: true,
+  },
+  env: {
+    CUSTOM_KEY: process.env.CUSTOM_KEY,
+  },
+}
+
+module.exports = nextConfig
 ```
 
 ## Correctness Properties
@@ -502,15 +596,15 @@ function useApiCall<T>(apiFunction: () => Promise<T>) {
 **Validates: Requirements 4.5**
 
 ### Property 13: Chat Session Creation
-*For any* buyer initiation of contact about a product, the system should create a new chat session with proper initialization
+*For any* buyer initiation of contact about a product, the system should create a new chat session with proper initialization in LocalStorage
 **Validates: Requirements 5.1**
 
-### Property 14: Real-time Message Delivery
-*For any* message sent by either party in an active chat session, the message should be delivered to the recipient immediately with proper timestamp and delivery status
+### Property 14: Message Storage and Display
+*For any* message sent by either party in an active chat session, the message should be stored in LocalStorage immediately and displayed with proper timestamp
 **Validates: Requirements 5.2, 5.3**
 
 ### Property 15: Message History Persistence
-*For any* chat session, all messages should be maintained in history for the duration of the session and preserved during periods of inactivity
+*For any* chat session, all messages should be maintained in LocalStorage and be recoverable after application reload
 **Validates: Requirements 5.4, 5.5**
 
 ### Property 16: LocalStorage Data Persistence
@@ -533,204 +627,62 @@ function useApiCall<T>(apiFunction: () => Promise<T>) {
 *For any* screen size change or mobile device access, the system should adapt the interface appropriately for touch interaction and maintain usability
 **Validates: Requirements 8.1, 8.2, 8.4**
 
-### Property 21: API Error Response Consistency
-*For any* API request failure or malformed input, the system should return appropriate HTTP status codes with descriptive error messages
+### Property 21: Gemini API Error Response Handling
+*For any* Gemini API request failure or malformed input, the system should handle errors gracefully with appropriate fallback responses
 **Validates: Requirements 9.4, 9.5**
 
 ### Property 22: Network Resilience
-*For any* network connectivity loss, the system should queue messages for delivery when connection is restored and provide clear status indicators
+*For any* network connectivity loss, the system should queue operations in LocalStorage for processing when connection is restored and provide clear status indicators
 **Validates: Requirements 10.1**
 
 ### Property 23: Service Fallback Reliability
-*For any* AI service unavailability, the system should provide fallback functionality with clear status indicators rather than complete failure
+*For any* Gemini AI service unavailability, the system should provide fallback functionality with clear status indicators rather than complete failure
 **Validates: Requirements 10.2**
 
 ### Property 24: Error Recovery and Data Preservation
-*For any* critical error or storage operation failure, the system should preserve user data, attempt retry with exponential backoff, and provide recovery options
+*For any* critical error or storage operation failure, the system should preserve user data in LocalStorage, attempt retry with exponential backoff, and provide recovery options
 **Validates: Requirements 10.3, 10.5**
 
 ### Property 25: User-Friendly Error Communication
 *For any* error condition, the system should display user-friendly error messages that explain the issue and suggest actionable solutions
 **Validates: Requirements 10.4**
 
-Now I need to use the prework tool to analyze the acceptance criteria before writing the Correctness Properties section.
-
 ## Error Handling
 
 ### Error Categories and Strategies
 
-#### 1. Network and API Errors
-**Strategy**: Graceful degradation with retry mechanisms
-- **Translation API failures**: Display original text with error indicator, allow manual retry
+#### 1. Gemini API Errors
+**Strategy**: Graceful degradation with cached responses
+- **Translation API failures**: Use cached translations or display original text with error indicator
 - **Price suggestion failures**: Show cached suggestions or category-based fallbacks
-- **Network connectivity loss**: Queue operations for retry when connection restored
+- **Rate limiting**: Implement exponential backoff and queue requests
 
 #### 2. Data Validation Errors
 **Strategy**: Immediate feedback with clear guidance
 - **Product creation validation**: Highlight missing fields with specific error messages
-- **API input validation**: Return descriptive error messages with correction suggestions
+- **Input validation**: Provide real-time validation with correction suggestions
 - **File format errors**: Provide examples of correct format
 
-#### 3. Storage and Persistence Errors
+#### 3. LocalStorage Errors
 **Strategy**: Data preservation with user notification
-- **LocalStorage quota exceeded**: Prioritize recent data, notify user of cleanup
-- **Storage operation failures**: Implement exponential backoff retry, preserve data in memory
+- **Storage quota exceeded**: Prioritize recent data, notify user of cleanup options
+- **Storage operation failures**: Implement retry mechanisms, preserve data in memory
 - **Data corruption**: Attempt recovery, provide export/import options
 
-#### 4. AI Service Errors
-**Strategy**: Fallback functionality with status transparency
-- **Translation service unavailable**: Allow manual language selection, show service status
-- **Price discovery failures**: Use category-based pricing, historical data
-- **Negotiation assistant errors**: Provide generic professional responses
+#### 4. Network and Connectivity Errors
+**Strategy**: Offline-first approach with sync when online
+- **Network unavailable**: Queue operations for later sync, show offline indicator
+- **Slow connections**: Implement timeout handling, show loading states
+- **Intermittent connectivity**: Retry with exponential backoff
 
-### Error Recovery Mechanisms
+### Testing Strategy
 
-```typescript
-interface ErrorRecovery {
-  retryWithBackoff: (operation: () => Promise<any>, maxRetries: number) => Promise<any>;
-  fallbackToCache: (key: string, fallbackValue: any) => any;
-  preserveUserData: (data: any) => void;
-  notifyUser: (error: Error, recovery: string) => void;
-}
-```
+The system requires comprehensive testing for a frontend-only architecture:
 
-## Testing Strategy
+**Unit Tests**: Focus on component behavior, LocalStorage operations, and AI service integration
+**Integration Tests**: Test complete user workflows with mocked Gemini API responses
+**Property Tests**: Verify universal properties across all possible inputs (minimum 100 iterations)
 
-### Dual Testing Approach
+**Framework**: Jest with React Testing Library for components, fast-check for property testing
 
-The system requires both unit testing and property-based testing for comprehensive coverage:
-
-**Unit Tests**: Focus on specific examples, edge cases, and integration points
-**Property Tests**: Verify universal properties across all possible inputs
-
-### Unit Testing Strategy
-
-**Framework**: Jest with React Testing Library for frontend, pytest for backend
-**Coverage Areas**:
-- Component rendering and user interactions
-- API endpoint responses with specific inputs
-- Error boundary behavior
-- Integration between components
-- Edge cases like empty data, network failures, storage limits
-
-**Example Unit Tests**:
-```typescript
-// Test specific product creation scenario
-test('should create product with valid data', () => {
-  const product = { name: 'Tomato', quantity: 10, price: 40, language: 'hi' };
-  const result = createProduct(product);
-  expect(result.success).toBe(true);
-  expect(result.product.id).toBeDefined();
-});
-
-// Test specific error condition
-test('should handle translation API failure gracefully', async () => {
-  mockTranslationAPI.mockRejectedValue(new Error('Service unavailable'));
-  const result = await translateMessage('Hello', 'en', 'hi');
-  expect(result.error).toBe(true);
-  expect(result.originalText).toBe('Hello');
-});
-```
-
-### Property-Based Testing Strategy
-
-**Framework**: fast-check for TypeScript/JavaScript, Hypothesis for Python
-**Configuration**: Minimum 100 iterations per property test
-**Tag Format**: Each test tagged with `Feature: multilingual-mandi-vendor-assistant, Property {number}: {property_text}`
-
-**Property Test Categories**:
-
-1. **Data Integrity Properties**: Test that operations preserve data consistency
-2. **Translation Properties**: Verify bidirectional translation behavior
-3. **API Contract Properties**: Ensure API responses match expected schemas
-4. **Storage Properties**: Test persistence and recovery across all data types
-5. **Error Handling Properties**: Verify graceful failure across all error conditions
-
-**Example Property Tests**:
-```typescript
-// Property 1: Product Creation Validation
-test('Property 1: Product creation validation', () => {
-  fc.assert(fc.property(
-    fc.record({
-      name: fc.string(),
-      quantity: fc.integer(),
-      price: fc.float(),
-      language: fc.string()
-    }),
-    (productData) => {
-      const result = validateProductData(productData);
-      // Should require all mandatory fields
-      const hasAllRequired = productData.name && 
-                           productData.quantity >= 0 && 
-                           productData.price > 0 && 
-                           productData.language;
-      expect(result.valid).toBe(hasAllRequired);
-    }
-  ));
-});
-
-// Property 16: LocalStorage Data Persistence  
-test('Property 16: LocalStorage data persistence', () => {
-  fc.assert(fc.property(
-    fc.array(fc.record({
-      name: fc.string(1, 50),
-      quantity: fc.integer(0, 1000),
-      price: fc.float(0.01, 10000),
-      language: fc.constantFrom('en', 'hi', 'ta', 'te')
-    })),
-    (products) => {
-      // Save products to localStorage
-      saveProductsToStorage(products);
-      
-      // Simulate app reload
-      clearMemoryState();
-      
-      // Restore from localStorage
-      const restored = loadProductsFromStorage();
-      
-      // Should restore all products with same data
-      expect(restored).toEqual(products);
-    }
-  ));
-});
-```
-
-### Integration Testing
-
-**Scope**: End-to-end workflows combining multiple components
-**Tools**: Playwright for browser automation, API testing with actual backend
-
-**Key Integration Scenarios**:
-- Complete product creation → price discovery → negotiation flow
-- Multi-language communication with real translation API
-- Offline/online state transitions with message queuing
-- Cross-browser compatibility and mobile responsiveness
-
-### Performance Testing
-
-**Metrics**: Load times, API response times, memory usage
-**Tools**: Lighthouse for frontend performance, load testing for APIs
-**Targets**: 
-- Initial page load < 2 seconds on 3G
-- API responses < 500ms for 95th percentile
-- Memory usage stable during extended sessions
-
-### Test Data Management
-
-**Strategy**: Use realistic test data that reflects actual usage patterns
-**Data Sources**:
-- Sample Indian market products and prices
-- Common negotiation phrases in multiple languages
-- Realistic user interaction patterns
-
-**Test Data Generation**:
-```typescript
-const generateTestProduct = () => ({
-  name: fc.sample(fc.constantFrom('Tomato', 'Onion', 'Potato', 'Banana', 'Apple'), 1)[0],
-  quantity: fc.sample(fc.integer(1, 100), 1)[0],
-  price: fc.sample(fc.float(10, 200), 1)[0],
-  language: fc.sample(fc.constantFrom('en', 'hi', 'ta', 'te', 'bn'), 1)[0]
-});
-```
-
-This comprehensive testing strategy ensures both specific functionality works correctly (unit tests) and universal properties hold across all inputs (property tests), providing confidence in system correctness and reliability.
+This design ensures a robust, scalable, and maintainable frontend-only solution that can be rapidly deployed to Vercel while providing full AI-powered functionality through direct Gemini integration.
