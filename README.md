@@ -5,8 +5,10 @@
 A web platform empowering India's local vendors with AI-driven multilingual communication, price discovery, and negotiation tools.
 
 **🌐 Live Demo:** [https://mandi-ai.aniketppatil.com/](https://mandi-ai.aniketppatil.com/)
-**Demo live recording:** 
+
+**Demo live recording:** [AI Price Suggestion]
 https://assets.aniketppatil.com/kiro-challenge/ai_suggested_real_pricing.mp4
+
 ## 🎯 Challenge Overview
 
 **Theme:** Creating a real-time linguistic bridge for local trade  

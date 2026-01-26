@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 
 interface ConversationMessage {
   sender: 'buyer' | 'vendor';
@@ -75,8 +75,7 @@ export default async function handler(
       });
     }
 
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const client = new GoogleGenAI({ apiKey });
 
     const conversationHistory = conversation_history
       .map(msg => `${msg.sender}: ${msg.text}`)
@@ -104,17 +103,29 @@ export default async function handler(
 
     let result;
     try {
-      result = await model.generateContent(prompt);
+      // Using latest gemini-2.5-flash model
+      result = await client.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        config: {
+          temperature: 0.7,
+          maxOutputTokens: 1000,
+          responseMimeType: 'application/json'
+        }
+      });
     } catch (error) {
-      console.error('Gemini error:', error);
+      console.error('Gemini 2.5 Flash error:', error);
       throw error;
     }
 
-    // Extract text safely
+    // Extract text safely from the @google/genai SDK result
     let responseText = '';
     try {
-      if (result && result.response && typeof result.response.text === 'function') {
-        responseText = result.response.text();
+      // Try to get text using the standard candidate path
+      if (result?.candidates?.[0]?.content?.parts?.[0]?.text) {
+        responseText = result.candidates[0].content.parts[0].text;
+      } else if (typeof result?.text === 'string') {
+        responseText = result.text;
       } else {
         responseText = JSON.stringify(result);
       }
@@ -138,15 +149,16 @@ export default async function handler(
       const parsedResponse = JSON.parse(jsonText);
       
       // CRITICAL: Ensure suggestions are strings! 
-      // Sometimes LLMs return an array of objects like [{response: "...", tone: "..."}]
       const rawSuggestions = parsedResponse.suggestions || [];
-      const sanitizedSuggestions = rawSuggestions.map((s: any) => {
-        if (typeof s === 'string') return s;
-        if (typeof s === 'object' && s !== null) {
-          return s.response || s.text || s.suggestion || JSON.stringify(s);
-        }
-        return String(s);
-      });
+      const sanitizedSuggestions = Array.isArray(rawSuggestions) 
+        ? rawSuggestions.map((s: any) => {
+            if (typeof s === 'string') return s;
+            if (typeof s === 'object' && s !== null) {
+              return s.response || s.text || s.suggestion || JSON.stringify(s);
+            }
+            return String(s);
+          })
+        : ["Thank you for your interest in our products."];
 
       const negotiationResponse: NegotiationResponse = {
         suggestions: sanitizedSuggestions.length > 0 ? sanitizedSuggestions : [

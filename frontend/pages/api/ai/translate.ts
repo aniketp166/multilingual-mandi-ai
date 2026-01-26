@@ -71,9 +71,9 @@ export default async function handler(
 
     let result;
     try {
-      // Try with gemini-2.0-flash-exp first
+      // Using latest gemini-2.5-flash model
       result = await genai.models.generateContent({
-        model: 'gemini-2.0-flash-exp',
+        model: 'gemini-2.5-flash',
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
         config: {
           temperature: 0.3,
@@ -81,26 +81,23 @@ export default async function handler(
         }
       });
     } catch (error) {
-      // Fallback to gemini-1.5-flash
-      result = await genai.models.generateContent({
-        model: 'gemini-1.5-flash',
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        config: {
-          temperature: 0.3,
-          maxOutputTokens: 1000,
-        }
-      });
+      console.error('Gemini 2.5 Flash error:', error);
+      throw error;
     }
 
-    // Extract text - handle both string and object responses
+    // Extract text safely from the @google/genai SDK result
     let translatedText = '';
-    if (typeof result.text === 'string') {
-      translatedText = result.text;
-    } else if (result.text && typeof result.text === 'object') {
-      // Handle case where text is an object (e.g., {response: "...", tone: "..."})
-      translatedText = (result.text as any).response || (result.text as any).text || JSON.stringify(result.text);
-    } else {
-      translatedText = String(result.text || '');
+    try {
+      if (result?.candidates?.[0]?.content?.parts?.[0]?.text) {
+        translatedText = result.candidates[0].content.parts[0].text;
+      } else if (typeof result?.text === 'string') {
+        translatedText = result.text;
+      } else {
+        translatedText = JSON.stringify(result);
+      }
+    } catch (textError) {
+      console.error('Error extracting text from result:', textError);
+      translatedText = String(result?.text || '');
     }
 
     const translationResponse: TranslationResponse = {

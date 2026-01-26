@@ -92,43 +92,44 @@ export default async function handler(
 
     let result;
     try {
-      // Try with gemini-2.0-flash-exp first
       result = await genai.models.generateContent({
-        model: 'gemini-2.0-flash-exp',
+        model: 'gemini-2.5-flash',
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
         config: {
           temperature: 0.7,
           maxOutputTokens: 1000,
+          responseMimeType: 'application/json'
         }
       });
     } catch (error) {
-      // Fallback to gemini-1.5-flash
-      result = await genai.models.generateContent({
-        model: 'gemini-1.5-flash',
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        config: {
-          temperature: 0.7,
-          maxOutputTokens: 1000,
-        }
-      });
+      console.error('Gemini 2.5 Flash error:', error);
+      throw error;
     }
 
-    // Extract text - handle both string and object responses
+    // Extract text safely from the @google/genai SDK result
     let responseText = '';
-    if (typeof result.text === 'string') {
-      responseText = result.text;
-    } else if (result.text && typeof result.text === 'object') {
-      // Handle case where text is an object (e.g., {response: "...", tone: "..."})
-      responseText = (result.text as any).response || (result.text as any).text || JSON.stringify(result.text);
-    } else {
-      responseText = String(result.text || '');
+    try {
+      if (result?.candidates?.[0]?.content?.parts?.[0]?.text) {
+        responseText = result.candidates[0].content.parts[0].text;
+      } else if (typeof result?.text === 'string') {
+        responseText = result.text;
+      } else {
+        responseText = JSON.stringify(result);
+      }
+    } catch (textError) {
+      console.error('Error extracting text from result:', textError);
+      responseText = JSON.stringify(result);
     }
     
-    // Extract JSON from response (handle markdown code blocks)
+    // Extract JSON (safely handle markdown or raw JSON)
     let jsonText = responseText;
-    const jsonMatch = responseText.match(/```json\n([\s\S]*?)\n```/) || responseText.match(/```\n([\s\S]*?)\n```/);
+    const jsonMatch = responseText.match(/```json\n([\s\S]*?)\n```/) || 
+                      responseText.match(/```\n([\s\S]*?)\n```/) ||
+                      responseText.match(/{[\s\S]*}/);
+    
     if (jsonMatch) {
-      jsonText = jsonMatch[1];
+      jsonText = jsonMatch[0];
+      if (jsonMatch[1]) jsonText = jsonMatch[1];
     }
     
     try {
