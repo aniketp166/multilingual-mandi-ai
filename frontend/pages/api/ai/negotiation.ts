@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 
 interface ConversationMessage {
   sender: 'buyer' | 'vendor';
@@ -74,57 +74,57 @@ export default async function handler(
       });
     }
 
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const client = new GoogleGenAI({ apiKey });
 
     const conversationHistory = conversation_history
       .map(msg => `${msg.sender}: ${msg.text}`)
       .join('\n');
 
-    const prompt = `You are helping a vendor in an Indian marketplace negotiate with a buyer. 
+    const prompt = `You are a vendor in an Indian marketplace negotiating with a buyer. 
 
 Product: ${product.name} (₹${product.price}/kg, ${product.quantity}kg available)
-Conversation so far:
+Conversation:
 ${conversationHistory}
+Buyer: "${buyer_message}"
 
-Latest buyer message: "${buyer_message}"
-
-Generate 3 professional, culturally appropriate responses for the vendor in ${vendor_language}. 
-The responses should be:
-1. Friendly and professional
-2. Aimed at closing the deal
-3. Respectful of Indian business culture
-
-Return ONLY a JSON object with this exact format:
+Generate 3 VERY SHORT (max 1 sentence each) professional responses in ${vendor_language}.
+Return as JSON:
 {
-  "suggestions": ["response1", "response2", "response3"],
+  "suggestions": ["short_res1", "short_res2", "short_res3"],
   "tone": "friendly"
 }`;
 
     let result;
     try {
-      result = await model.generateContent(prompt);
+      result = await client.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        config: {
+          temperature: 0.4,
+          maxOutputTokens: 4096,
+          responseMimeType: 'application/json',
+        }
+      });
     } catch (error) {
       console.error('Gemini error:', error);
       throw error;
     }
 
     let responseText = '';
-    try {
-      if (result && result.response) {
-        responseText = result.response.text();
-      } else {
-        responseText = JSON.stringify(result);
-      }
-    } catch (textError) {
-      console.error('Error extracting text:', textError);
-      responseText = JSON.stringify(result);
+    if (result?.candidates?.[0]?.content?.parts?.[0]?.text) {
+      responseText = result.candidates[0].content.parts[0].text;
+    } else if (typeof result?.text === 'string') {
+      responseText = result.text;
+    } else if (result?.text && typeof result.text === 'object') {
+      responseText = (result.text as any).response || (result.text as any).text || JSON.stringify(result.text);
+    } else {
+      responseText = String(result?.text || '');
     }
     
     let jsonText = responseText.trim();
-    const jsonMatch = responseText.match(/```json\n([\s\S]*?)\n```/) || 
-                      responseText.match(/```\n([\s\S]*?)\n```/);
     
+    // Improved JSON extraction regex
+    const jsonMatch = responseText.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
     if (jsonMatch && jsonMatch[1]) {
       jsonText = jsonMatch[1].trim();
     } else {
@@ -135,7 +135,9 @@ Return ONLY a JSON object with this exact format:
     }
     
     try {
-      const parsedResponse = JSON.parse(jsonText);
+      // Clean potential control characters that break JSON.parse
+      const cleanJsonText = jsonText.replace(/[\u0000-\u001F\u007F-\u009F]/g, " ");
+      const parsedResponse = JSON.parse(cleanJsonText);
       
       const rawSuggestions = parsedResponse.suggestions || [];
       const sanitizedSuggestions = Array.isArray(rawSuggestions) 
@@ -155,7 +157,7 @@ Return ONLY a JSON object with this exact format:
           "I appreciate your business."
         ],
         context: "AI-generated negotiation assistance",
-        tone: parsedResponse.tone || 'friendly'
+        tone: (parsedResponse.tone || 'friendly').trim()
       };
 
       return res.status(200).json({

@@ -85,9 +85,12 @@ export default function BuyerPage() {
     }
   };
 
+  const [isSending, setIsSending] = useState(false);
+
   const handleSendMessage = async (messageText: string) => {
     if (!activeChatSession || !selectedProduct) return;
 
+    setIsSending(true);
     const newMessage: Message = {
       id: `msg_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
       sender: 'buyer',
@@ -96,10 +99,8 @@ export default function BuyerPage() {
       timestamp: new Date().toISOString()
     };
 
-    // Translate message to vendor's language if different
     if (buyerLanguage !== selectedProduct.language) {
       try {
-        console.log('Translating buyer message from', buyerLanguage, 'to', selectedProduct.language);
         const response = await fetch('/api/ai/translate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -110,30 +111,15 @@ export default function BuyerPage() {
           })
         });
 
-        console.log('Translation API response status:', response.status);
         const data = await response.json();
-        console.log('Translation API response data:', data);
-
         if (data.success && data.data) {
-          // Ensure translated_text is a string, not an object
-          const translatedText = data.data.translated_text;
-          if (typeof translatedText === 'string') {
-            newMessage.translated_text = translatedText;
-          } else if (translatedText && typeof translatedText === 'object') {
-            // Handle case where API returns an object instead of string
-            newMessage.translated_text = (translatedText as any).response || (translatedText as any).text || JSON.stringify(translatedText);
-          } else {
-            newMessage.translated_text = String(translatedText || messageText);
-          }
-        } else {
-          console.error('Translation API returned unsuccessful response:', data);
+          newMessage.translated_text = data.data.translated_text;
         }
       } catch (error) {
         console.error('Translation error:', error);
       }
     }
 
-    // Update chat session with new message
     const updatedMessages = [...activeChatSession.messages, newMessage];
     const updatedSession = storage.updateChatSession(activeChatSession.id, {
       messages: updatedMessages
@@ -142,6 +128,7 @@ export default function BuyerPage() {
     if (updatedSession) {
       setActiveChatSession(updatedSession);
     }
+    setIsSending(false);
   };
 
   const handleCloseChat = () => {
@@ -330,6 +317,7 @@ export default function BuyerPage() {
             onClearMessages={handleClearChatMessages}
             userRole="buyer"
             userLanguage={buyerLanguage}
+            isSending={isSending}
           />
         )}
       </div>

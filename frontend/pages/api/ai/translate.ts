@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 
 interface TranslationRequest {
   text: string;
@@ -61,8 +61,7 @@ export default async function handler(
       });
     }
 
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const client = new GoogleGenAI({ apiKey });
     
     const prompt = `Translate the following text from ${source_language} to ${target_language}. 
     Only return the translated text, nothing else.
@@ -71,22 +70,28 @@ export default async function handler(
 
     let result;
     try {
-      result = await model.generateContent(prompt);
+      result = await client.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        config: {
+          temperature: 0.3,
+          maxOutputTokens: 2048,
+        }
+      });
     } catch (error) {
       console.error('Gemini error:', error);
       throw error;
     }
 
     let translatedText = '';
-    try {
-      if (result && result.response) {
-        translatedText = result.response.text();
-      } else {
-        translatedText = JSON.stringify(result);
-      }
-    } catch (textError) {
-      console.error('Error extracting text:', textError);
-      translatedText = JSON.stringify(result);
+    if (result?.candidates?.[0]?.content?.parts?.[0]?.text) {
+      translatedText = result.candidates[0].content.parts[0].text;
+    } else if (typeof result?.text === 'string') {
+      translatedText = result.text;
+    } else if (result?.text && typeof result.text === 'object') {
+      translatedText = (result.text as any).response || (result.text as any).text || JSON.stringify(result.text);
+    } else {
+      translatedText = String(result?.text || '');
     }
 
     const translationResponse: TranslationResponse = {

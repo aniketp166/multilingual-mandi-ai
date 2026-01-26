@@ -33,7 +33,7 @@ export interface ChatSession {
   vendor_id: string;
   buyer_id: string;
   messages: Message[];
-  status: "active" | "closed";
+  status: "active" | "closed" | "archived";
   created_at: string;
 }
 
@@ -66,6 +66,7 @@ export interface PriceSuggestionRequest {
   quantity: number;
   current_price?: number;
   location?: string;
+  language?: string;
 }
 
 export interface PriceSuggestionResponse {

@@ -1,11 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from '@google/genai';
 
 interface PriceSuggestionRequest {
   product_name: string;
   quantity: number;
   current_price?: number;
   location?: string;
+  language?: string;
 }
 
 interface PriceSuggestionResponse {
@@ -36,7 +37,7 @@ export default async function handler(
   }
 
   try {
-    const { product_name, quantity, current_price, location }: PriceSuggestionRequest = req.body;
+    const { product_name, quantity, current_price, location, language }: PriceSuggestionRequest = req.body;
 
     if (!product_name || !quantity) {
       return res.status(400).json({
@@ -64,71 +65,82 @@ export default async function handler(
       });
     }
 
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const client = new GoogleGenAI({ apiKey });
 
-    const prompt = `As a market analyst for Indian agricultural products, provide pricing recommendations for the following:
+    const responseLanguage = language || 'en';
+    const languageInstruction = responseLanguage !== 'en' 
+      ? `Provide the reasoning in ${responseLanguage} language.` 
+      : '';
 
-    Product: ${product_name}
-    Quantity: ${quantity} kg
-    Current asking price: ₹${current_price || 'Not specified'}
-    Location: ${location || 'India'}
+    const prompt = `As a market analyst for Indian agricultural products, provide pricing recommendations:
 
-    Please provide:
-    1. Minimum fair price per kg
-    2. Maximum reasonable price per kg  
-    3. Recommended selling price per kg
-    4. Brief reasoning (2-3 sentences)
-    5. Market trend (rising/falling/stable)
+Product: ${product_name}
+Quantity: ${quantity} kg
+Current Price: ₹${current_price || 'Not specified'}
+Location: ${location || 'India'}
 
-    Format your response as JSON:
-    {
-      "min_price": number,
-      "max_price": number,
-      "recommended_price": number,
-      "reasoning": "string",
-      "market_trend": "rising|falling|stable"
-    }`;
+Requirements:
+1. reasoning must be max 2 VERY SHORT sentences in ${responseLanguage}.
+2. market_trend must be rising|falling|stable.
+
+Format:
+{
+  "min_price": number,
+  "max_price": number,
+  "recommended_price": number,
+  "reasoning": "string",
+  "market_trend": "string"
+}`;
 
     let result;
     try {
-      result = await model.generateContent(prompt);
+      result = await client.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        config: {
+          temperature: 0.4,
+          maxOutputTokens: 2048,
+          responseMimeType: 'application/json',
+        }
+      });
     } catch (error) {
       console.error('Gemini error:', error);
       throw error;
     }
 
     let responseText = '';
-    try {
-      if (result && result.response) {
-        responseText = result.response.text();
-      } else {
-        responseText = JSON.stringify(result);
+    if (result?.candidates?.[0]?.content?.parts?.[0]?.text) {
+      responseText = result.candidates[0].content.parts[0].text;
+    } else if (typeof result?.text === 'string') {
+      responseText = result.text;
+    } else if (result?.text && typeof result.text === 'object') {
+      responseText = (result.text as any).response || (result.text as any).text || JSON.stringify(result.text);
+    } else {
+      responseText = String(result?.text || '');
+    }
+    
+    let jsonText = responseText.trim();
+    const jsonMatch = responseText.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+    
+    if (jsonMatch && jsonMatch[1]) {
+      jsonText = jsonMatch[1].trim();
+    } else {
+      const objectMatch = responseText.match(/\{[\s\S]*\}/);
+      if (objectMatch) {
+        jsonText = objectMatch[0];
       }
-    } catch (textError) {
-      console.error('Error extracting text:', textError);
-      responseText = JSON.stringify(result);
-    }
-    
-    let jsonText = responseText;
-    const jsonMatch = responseText.match(/```json\n([\s\S]*?)\n```/) || 
-                      responseText.match(/```\n([\s\S]*?)\n```/) ||
-                      responseText.match(/{[\s\S]*}/);
-    
-    if (jsonMatch) {
-      jsonText = jsonMatch[0];
-      if (jsonMatch[1]) jsonText = jsonMatch[1];
     }
     
     try {
-      const parsedResponse = JSON.parse(jsonText);
+      const cleanJsonText = jsonText.replace(/[\u0000-\u001F\u007F-\u009F]/g, " ");
+      const parsedResponse = JSON.parse(cleanJsonText);
       
       const priceSuggestionResponse: PriceSuggestionResponse = {
         min_price: parsedResponse.min_price || 20,
         max_price: parsedResponse.max_price || 60,
         recommended_price: parsedResponse.recommended_price || 40,
-        reasoning: parsedResponse.reasoning || 'AI-generated pricing based on market analysis',
-        market_trend: parsedResponse.market_trend || 'stable',
+        reasoning: (parsedResponse.reasoning || 'AI-generated pricing based on market analysis').trim().replace(/^[n]\s+/, ""),
+        market_trend: (parsedResponse.market_trend || 'stable').trim() as any,
         confidence: 0.85
       };
 

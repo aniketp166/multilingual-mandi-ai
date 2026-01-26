@@ -40,7 +40,8 @@ const PriceSuggestionModal: React.FC<PriceSuggestionModalProps> = ({
         product_name: product.name,
         quantity: product.quantity,
         current_price: product.price,
-        location: 'India'
+        location: 'India',
+        language: product.language // Pass product language for localized reasoning
       });
 
       if (response.success) {
@@ -54,7 +55,7 @@ const PriceSuggestionModal: React.FC<PriceSuggestionModalProps> = ({
     } finally {
       setLoading(false);
     }
-  }, [product.name, product.quantity, product.price]);
+  }, [product.name, product.quantity, product.price, product.language]);
 
   useEffect(() => {
     if (isOpen && product) {

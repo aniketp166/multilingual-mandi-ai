@@ -9,6 +9,7 @@ interface NegotiationChatProps {
   onClearMessages?: () => void;
   userRole: 'vendor' | 'buyer';
   userLanguage: string;
+  isSending?: boolean;
 }
 
 export default function NegotiationChat({
@@ -18,7 +19,8 @@ export default function NegotiationChat({
   onClose,
   onClearMessages,
   userRole,
-  userLanguage
+  userLanguage,
+  isSending = false
 }: NegotiationChatProps) {
   const [messageText, setMessageText] = useState('');
   const [suggestions, setSuggestions] = useState<string[]>([]);
@@ -262,19 +264,24 @@ export default function NegotiationChat({
                 type="text"
                 value={messageText}
                 onChange={(e) => setMessageText(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                placeholder="Type your message..."
-                className="w-full pl-4 pr-12 py-3 sm:py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-emerald-500/20 focus:bg-white transition-all text-sm sm:text-base outline-none shadow-inner"
+                onKeyPress={(e) => e.key === 'Enter' && !isSending && handleSendMessage()}
+                placeholder={isSending ? "Processing message..." : "Type your message..."}
+                disabled={isSending}
+                className={`w-full pl-4 pr-12 py-3 sm:py-4 bg-gray-50 border-none rounded-2xl focus:ring-2 focus:ring-emerald-500/20 focus:bg-white transition-all text-sm sm:text-base outline-none shadow-inner ${isSending ? 'opacity-50 cursor-not-allowed' : ''}`}
               />
             </div>
             <button
               onClick={handleSendMessage}
-              disabled={!messageText.trim()}
-              className="bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white p-3 sm:p-4 rounded-2xl shadow-lg shadow-emerald-200 disabled:opacity-30 disabled:shadow-none disabled:active:scale-100 transition-all duration-200 group active:scale-95"
+              disabled={!messageText.trim() || isSending}
+              className="bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white p-3 sm:p-4 rounded-2xl shadow-lg shadow-emerald-200 disabled:opacity-30 disabled:shadow-none disabled:active:scale-100 transition-all duration-200 group active:scale-95 flex items-center justify-center min-w-[50px] sm:min-w-[60px]"
             >
-              <svg className="w-5 h-5 sm:w-6 sm:h-6 transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-              </svg>
+              {isSending ? (
+                <div className="animate-spin rounded-full h-5 w-5 sm:h-6 sm:w-6 border-2 border-white border-t-transparent"></div>
+              ) : (
+                <svg className="w-5 h-5 sm:w-6 sm:h-6 transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+              )}
             </button>
           </div>
         </div>

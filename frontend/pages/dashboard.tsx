@@ -18,14 +18,24 @@ const Dashboard: React.FC = () => {
   const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
   const [activeChatSession, setActiveChatSession] = useState<ChatSession | null>(null);
   const [vendorLanguage, setVendorLanguage] = useState('en');
+  const [isChatListModalOpen, setIsChatListModalOpen] = useState(false);
 
   useEffect(() => {
     const loadData = () => {
       try {
         const storedProducts = storage.getProducts();
         setProducts(storedProducts);
-        const storedChatSessions = storage.getChatSessions();
-        setChatSessions(storedChatSessions.filter(s => s.status === 'active' && s.messages.length > 0));
+
+        const allSessions = storage.getChatSessions();
+        const activeSessions = allSessions
+          .filter(s => s.status === 'active' && s.messages.length > 0 && storedProducts.some(p => p.id === s.product_id))
+          .sort((a, b) => {
+            const timeA = new Date(a.messages[a.messages.length - 1]?.timestamp || 0).getTime();
+            const timeB = new Date(b.messages[b.messages.length - 1]?.timestamp || 0).getTime();
+            return timeB - timeA;
+          });
+
+        setChatSessions(activeSessions);
 
         const prefs = storage.getUserPreferences();
         if (prefs.language) {
@@ -40,7 +50,6 @@ const Dashboard: React.FC = () => {
 
     loadData();
 
-    // Sync with other tabs
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'multilingual-mandi-data') {
         loadData();
@@ -49,10 +58,17 @@ const Dashboard: React.FC = () => {
 
     window.addEventListener('storage', handleStorageChange);
 
-    // Background poll for all updates
     const globalPoll = setInterval(() => {
+      const storedProducts = storage.getProducts();
       const allSessions = storage.getChatSessions();
-      const activeSessions = allSessions.filter(s => s.status === 'active' && s.messages.length > 0);
+
+      const activeSessions = allSessions
+        .filter(s => s.status === 'active' && s.messages.length > 0 && storedProducts.some(p => p.id === s.product_id))
+        .sort((a, b) => {
+          const timeA = new Date(a.messages[a.messages.length - 1]?.timestamp || 0).getTime();
+          const timeB = new Date(b.messages[b.messages.length - 1]?.timestamp || 0).getTime();
+          return timeB - timeA;
+        });
 
       setChatSessions(prev => {
         if (JSON.stringify(prev) !== JSON.stringify(activeSessions)) {
@@ -156,9 +172,22 @@ const Dashboard: React.FC = () => {
   };
 
   const handleDeleteProduct = (productId: string) => {
-    const success = storage.deleteProduct(productId);
-    if (success) {
-      setProducts(prev => prev.filter(p => p.id !== productId));
+    if (confirm('Are you sure you want to delete this product? All active chats for this product will also be archived.')) {
+      const success = storage.deleteProduct(productId);
+      if (success) {
+        setProducts(prev => prev.filter(p => p.id !== productId));
+
+        // Also archive associated chats
+        const allSessions = storage.getChatSessions();
+        allSessions.forEach(session => {
+          if (session.product_id === productId) {
+            storage.updateChatSession(session.id, { status: 'archived' });
+          }
+        });
+
+        // Immediate UI update for chats
+        setChatSessions(prev => prev.filter(s => s.product_id !== productId));
+      }
     }
   };
 
@@ -196,9 +225,12 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  const [isSending, setIsSending] = useState(false);
+
   const handleSendMessage = async (messageText: string) => {
     if (!activeChatSession || !selectedProduct) return;
 
+    setIsSending(true);
     const newMessage: Message = {
       id: `msg_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
       sender: 'vendor',
@@ -207,8 +239,6 @@ const Dashboard: React.FC = () => {
       timestamp: new Date().toISOString()
     };
 
-    // Translate message to buyer's language if different
-    // For now, we'll assume buyer language from the last buyer message
     const lastBuyerMessage = activeChatSession.messages
       .filter(m => m.sender === 'buyer')
       .pop();
@@ -227,23 +257,13 @@ const Dashboard: React.FC = () => {
 
         const data = await response.json();
         if (data.success && data.data) {
-          // Ensure translated_text is a string, not an object
-          const translatedText = data.data.translated_text;
-          if (typeof translatedText === 'string') {
-            newMessage.translated_text = translatedText;
-          } else if (translatedText && typeof translatedText === 'object') {
-            // Handle case where API returns an object instead of string
-            newMessage.translated_text = (translatedText as any).response || (translatedText as any).text || JSON.stringify(translatedText);
-          } else {
-            newMessage.translated_text = String(translatedText || messageText);
-          }
+          newMessage.translated_text = data.data.translated_text;
         }
       } catch (error) {
         console.error('Translation error:', error);
       }
     }
 
-    // Update chat session with new message
     const updatedMessages = [...activeChatSession.messages, newMessage];
     const updatedSession = storage.updateChatSession(activeChatSession.id, {
       messages: updatedMessages
@@ -251,7 +271,6 @@ const Dashboard: React.FC = () => {
 
     if (updatedSession) {
       setActiveChatSession(updatedSession);
-      // Update or add to chat sessions list
       setChatSessions(prev => {
         const existingIndex = prev.findIndex(s => s.id === updatedSession.id);
         if (existingIndex >= 0) {
@@ -261,6 +280,7 @@ const Dashboard: React.FC = () => {
         }
       });
     }
+    setIsSending(false);
   };
 
   const handleCloseChat = () => {
@@ -427,7 +447,7 @@ const Dashboard: React.FC = () => {
                 </div>
               </div>
 
-              <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100 hover:shadow-2xl transition-shadow duration-200 cursor-pointer" onClick={() => chatSessions.length > 0 && handleOpenChat(chatSessions[0])}>
+              <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100 hover:shadow-2xl transition-shadow duration-200 cursor-pointer" onClick={() => chatSessions.length > 0 && setIsChatListModalOpen(true)}>
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <p className="text-gray-500 text-xs font-semibold uppercase tracking-wide mb-2">Active Chats</p>
@@ -435,7 +455,7 @@ const Dashboard: React.FC = () => {
                       {chatSessions.length}
                     </p>
                     <p className="text-gray-600 text-sm font-medium mt-1">
-                      {chatSessions.length > 0 ? 'Click to view' : 'No messages'}
+                      {chatSessions.length > 0 ? 'Click to select' : 'No messages'}
                     </p>
                   </div>
                   <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-orange-100 to-orange-200 rounded-2xl flex items-center justify-center flex-shrink-0">
@@ -619,6 +639,44 @@ const Dashboard: React.FC = () => {
           />
         )}
 
+        {/* Chat List Modal */}
+        {isChatListModalOpen && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9998] p-4 animate-fade-in text-gray-950">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg flex flex-col max-h-[80vh] animate-scale-in">
+              <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+                <h3 className="text-xl font-bold text-gray-900">Active Conversations</h3>
+                <button onClick={() => setIsChatListModalOpen(false)} className="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                {chatSessions.map(session => {
+                  const product = products.find(p => p.id === session.product_id);
+                  const lastMessage = session.messages[session.messages.length - 1];
+                  return (
+                    <div
+                      key={session.id}
+                      onClick={() => {
+                        handleOpenChat(session);
+                        setIsChatListModalOpen(false);
+                      }}
+                      className="p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-emerald-300 hover:bg-emerald-50 transition-all cursor-pointer group"
+                    >
+                      <div className="flex justify-between items-start mb-1">
+                        <span className="font-bold text-emerald-700">{product?.name || 'Unknown Product'}</span>
+                        <span className="text-[10px] text-gray-400">
+                          {new Date(lastMessage.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600 line-clamp-1 italic">
+                        "{lastMessage.text}"
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Chat Modal */}
         {activeChatSession && selectedProduct && (
           <NegotiationChat
@@ -629,6 +687,7 @@ const Dashboard: React.FC = () => {
             onClearMessages={handleClearChatMessages}
             userRole="vendor"
             userLanguage={vendorLanguage}
+            isSending={isSending}
           />
         )}
       </div>
