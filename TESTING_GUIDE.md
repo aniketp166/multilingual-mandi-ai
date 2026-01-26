@@ -207,7 +207,7 @@ Complete step-by-step guide to test all AI-powered features in the application.
 ```
 ✅ No red errors
 ✅ API calls show 200 status
-✅ Logs show: "Using gemini-2.0-flash-exp" or fallback model
+✅ Logs show: "Using gemini-2.5-flash"
 ```
 
 ### **In Network Tab:**
@@ -246,7 +246,7 @@ npm run dev
 
 ### **Issue 2: "404 Not Found" from Gemini**
 **Cause**: Wrong model name or API endpoint
-**Fix**: Already fixed in code - uses gemini-2.0-flash-exp with fallback
+**Fix**: Already fixed in code - uses gemini-2.5-flash
 
 ### **Issue 3: Chat modal not visible**
 **Cause**: Z-index issue
@@ -275,7 +275,7 @@ npm run dev
 **If slower:**
 - Check internet connection
 - Check Gemini API status
-- Try fallback model (gemini-1.5-flash)
+- Try lower temperature or different region if slow
 
 ---
 

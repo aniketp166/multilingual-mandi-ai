@@ -11,36 +11,40 @@ A web platform empowering India's local vendors with AI-driven multilingual comm
 - [AI Price Suggestion](https://assets.aniketppatil.com/kiro-challenge/ai_suggested_real_pricing.mp4)
 - [Message Translation](https://assets.aniketppatil.com/kiro-challenge/message_translate.mp4)
 
-## 🎯 Challenge Overview
+---
 
-**Theme:** Creating a real-time linguistic bridge for local trade  
-**Goal:** Empower India's local markets with AI, making trade inclusive and efficient  
-**Vision:** Technology that serves every Indian trader, regardless of language or location
+## 🤖 Advanced AI Features
 
-## ✨ Key Features
+Our platform leverages **Gemini 2.5 Flash** (the flagship model) to provide a suite of intelligent tools designed specifically for the Indian marketplace:
 
-- **💬 Real-Time Chat** - Instant buyer-vendor communication with multilingual support
-- **🗣️ 8 Indian Languages** - Hindi, English, Tamil, Telugu, Bengali, Marathi, Gujarati, Kannada
-- **💰 AI Price Discovery** - Smart pricing recommendations powered by Google Gemini
-- **🤝 Negotiation Assistant** - AI-powered negotiation with smart reply suggestions
-- **📊 Vendor Dashboard** - Product management with inventory tracking and chat inbox
-- **🛒 Buyer Marketplace** - Browse products and contact vendors directly
-- **📱 Mobile Responsive** - Optimized for smartphones and tablets
+1.  **🌐 Real-Time Linguistic Bridge**: Seamless, automatic translation between **8+ Indian languages** (Hindi, Marathi, Tamil, Telugu, Bengali, Gujarati, Kannada, and English). Buyers and vendors can chat in their native tongues without ever knowing a language barrier exists.
+2.  **📈 Grounded Price Discovery**: Smart pricing recommendations that aren't just guesses. Our AI uses **Google Search Grounding** to look up real-time market prices across India, providing vendors with Min/Max ranges and detailed reasoning.
+3.  **🤝 Intelligent Negotiation Assistant**: To help local vendors close deals faster, the AI analyzes the chat history and suggests **3 contextually aware replies** in the vendor's native language.
+4.  **🧠 Context-Aware Conversations**: Unlike simple translators, our AI maintains the "state" of the negotiation. It knows if the buyer is asking for more quantity than is available and adjusts its suggestions accordingly.
+5.  **⚡ Ultra-Fast Processing**: Optimized for low-latency interactions, ensuring that AI-powered trade feels smooth and professional.
+6.  **🔒 Secure & Sanitized Intelligence**: Every AI response passes through a sanitation layer to ensure clean, structured data and professional communication standards.
+
+---
+
+## ✨ Key UX Features
+
+- **📊 Comprehensive Vendor Dashboard**: Manage inventory, monitor active chats, and see real-time valuation of your stock.
+- **🛒 Inclusive Buyer Marketplace**: A clean, accessible interface for buyers to find local produce and connect with vendors.
+- **📱 Bharat-First Design**: Optimized for mobile performance, considering the reality of local markets and traditional traders.
+- **🔄 Live Sync & persistence**: Powered by resilient LocalStorage logic to ensure conversation history and products are never lost.
+
+---
 
 ## 🛠️ Tech Stack
 
-**Frontend:** Next.js 14, TypeScript, Tailwind CSS  
-**AI:** Google Gemini API (gemini-2.0-flash-exp, gemini-1.5-flash)  
-**Storage:** LocalStorage for client-side persistence  
+**Frontend:** Next.js 14, TypeScript, Tailwind CSS, Framer Motion  
+**AI Platform:** Google Gemini 2.5 Flash (API-Grounded)  
+**Storage:** Resilient LocalStorage Manager with Quota Handling & Caching  
 **Deployment:** Vercel
 
+---
+
 ## 🚀 Quick Start
-
-### Prerequisites
-- Node.js 16+ and npm
-- Google Gemini API Key ([Get one here](https://makersuite.google.com/app/apikey))
-
-### Installation
 
 ```bash
 # Clone and navigate
@@ -57,55 +61,15 @@ echo "GEMINI_API_KEY=your_api_key_here" > .env
 npm run dev
 ```
 
-**Access:** http://localhost:3000
+**Access:** [http://localhost:3000](http://localhost:3000)
 
-## 📖 Usage Guide
+---
 
-### For Vendors (`/dashboard`)
-1. Set your preferred language
-2. Add products with name, quantity, and price
-3. Get AI-powered price suggestions
-4. Monitor chat inbox for buyer inquiries
-5. Respond with AI-generated negotiation suggestions
+## 🎨 Our Vision
 
-### For Buyers (`/buyer`)
-1. Select your preferred language
-2. Browse available products
-3. Click "Contact Vendor" to start a chat
-4. Negotiate prices with automatic translation
+We believe in technology that serves every Indian citizen. By bridging the linguistic divide, we are making commerce **inclusive, transparent, and efficient**. We are building the digital infrastructure for a **Viksit Bharat**.
 
-### Chat Features
-- **Auto Translation** - Messages translated between buyer and vendor languages
-- **AI Suggestions** - Smart reply suggestions for vendors during negotiations
-- **Message History** - All conversations saved in LocalStorage
-- **Show Original** - Toggle between translated and original text
-
-## 🎨 Design Philosophy
-
-**Bharat-First Approach**
-- Multilingual by design (8+ Indian languages)
-- Simple interfaces for traditional traders
-- Mobile accessibility for basic smartphones
-
-**AI for Good**
-- Democratizing technology for local vendors
-- Transparent pricing and fair trade
-- Bridging traditional and digital commerce
-
-## 📱 Implemented Features
-
-✅ Vendor dashboard with product management  
-✅ Buyer marketplace with search  
-✅ Real-time chat with translation  
-✅ AI price suggestions  
-✅ Negotiation assistance  
-✅ LocalStorage persistence  
-✅ Mobile-first responsive design  
-✅ Secure API routes
-
-## 📄 License
-
-MIT License - Built with ❤️ for the 26 Jan Prompt Challenge
+**BEST of LUCK!**
 
 ---
 
