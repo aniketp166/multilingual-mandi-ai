@@ -24,6 +24,7 @@ export default function NegotiationChat({
   const [showOriginal, setShowOriginal] = useState<Record<string, boolean>>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const lastProcessedMessageId = useRef<string | null>(null);
+  const initialMessageCount = useRef<number>(chatSession.messages.length);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -41,6 +42,11 @@ export default function NegotiationChat({
 
   // Fetch AI suggestions when buyer sends a message (for vendor)
   useEffect(() => {
+    // Skip if this is the initial render (chat just opened)
+    if (chatSession.messages.length <= initialMessageCount.current) {
+      return;
+    }
+
     if (userRole === 'vendor' && chatSession.messages.length > 0) {
       const lastMessage = chatSession.messages[chatSession.messages.length - 1];
       

@@ -12,26 +12,24 @@ A web platform empowering India's local vendors with AI-driven multilingual comm
 **Goal:** Empower India's local markets with AI, making trade inclusive and efficient  
 **Vision:** Technology that serves every Indian trader, regardless of language or location
 
-## ✨ Features
+## ✨ Key Features
 
-- **💬 Real-Time Chat** - Buyers and vendors can communicate instantly with multilingual support
-- **🗣️ Multilingual Translation** - Hindi, English, Tamil, Telugu, Bengali, Marathi, Gujarati, Kannada
+- **💬 Real-Time Chat** - Instant buyer-vendor communication with multilingual support
+- **🗣️ 8 Indian Languages** - Hindi, English, Tamil, Telugu, Bengali, Marathi, Gujarati, Kannada
 - **💰 AI Price Discovery** - Smart pricing recommendations powered by Google Gemini
-- **🤝 Negotiation Assistant** - AI-powered negotiation support with smart reply suggestions
+- **🤝 Negotiation Assistant** - AI-powered negotiation with smart reply suggestions
 - **📊 Vendor Dashboard** - Product management with inventory tracking and chat inbox
 - **🛒 Buyer Marketplace** - Browse products and contact vendors directly
-- **📦 Product Management** - Add, edit, delete products with multilingual support
 - **📱 Mobile Responsive** - Optimized for smartphones and tablets
 
 ## 🛠️ Tech Stack
 
-- **Next.js 14** - React framework with TypeScript
-- **Tailwind CSS** - Utility-first CSS framework
-- **Google Gemini API** - AI-powered translation, pricing, and negotiation
-- **LocalStorage** - Client-side data persistence
-- **Vercel** - Deployment and hosting
+**Frontend:** Next.js 14, TypeScript, Tailwind CSS  
+**AI:** Google Gemini API (gemini-2.0-flash-exp, gemini-1.5-flash)  
+**Storage:** LocalStorage for client-side persistence  
+**Deployment:** Vercel
 
-## 🚀 Getting Started
+## 🚀 Quick Start
 
 ### Prerequisites
 - Node.js 16+ and npm
@@ -40,7 +38,7 @@ A web platform empowering India's local vendors with AI-driven multilingual comm
 ### Installation
 
 ```bash
-# Clone repository
+# Clone and navigate
 git clone https://github.com/aniketp166/multilingual-mandi-ai.git
 cd multilingual-mandi-ai/frontend
 
@@ -56,59 +54,49 @@ npm run dev
 
 **Access:** http://localhost:3000
 
-## 🎯 How to Use
+## 📖 Usage Guide
 
-### For Vendors
-1. Visit the **Vendor Dashboard** at `/dashboard`
-2. Add your products with name, quantity, and price
-3. Get AI-powered price suggestions for competitive pricing
-4. Monitor your chat inbox for buyer inquiries
-5. Respond to buyers with AI-generated negotiation suggestions
+### For Vendors (`/dashboard`)
+1. Set your preferred language
+2. Add products with name, quantity, and price
+3. Get AI-powered price suggestions
+4. Monitor chat inbox for buyer inquiries
+5. Respond with AI-generated negotiation suggestions
 
-### For Buyers
-1. Visit the **Browse Products** page at `/buyer`
-2. Select your preferred language
-3. Browse available products from vendors
-4. Click "Contact Vendor" to start a chat
-5. Negotiate prices in real-time with automatic translation
+### For Buyers (`/buyer`)
+1. Select your preferred language
+2. Browse available products
+3. Click "Contact Vendor" to start a chat
+4. Negotiate prices with automatic translation
 
 ### Chat Features
-- **Automatic Translation**: Messages are translated between buyer and vendor languages
-- **AI Suggestions**: Vendors get smart reply suggestions during negotiations
-- **Message History**: All conversations are saved in LocalStorage
-- **Show Original**: Toggle between translated and original text
-
-
+- **Auto Translation** - Messages translated between buyer and vendor languages
+- **AI Suggestions** - Smart reply suggestions for vendors during negotiations
+- **Message History** - All conversations saved in LocalStorage
+- **Show Original** - Toggle between translated and original text
 
 ## 🎨 Design Philosophy
 
-### Bharat-First Approach
-- **Multilingual by Design** - 8+ Indian languages supported
-- **Inclusive UX** - Simple interfaces for traditional traders
-- **Cultural Sensitivity** - Respecting Indian trading customs
-- **Mobile Accessibility** - Works on basic smartphones
+**Bharat-First Approach**
+- Multilingual by design (8+ Indian languages)
+- Simple interfaces for traditional traders
+- Mobile accessibility for basic smartphones
 
-### AI for Good
-- **Democratizing Technology** - Making AI accessible to local vendors
-- **Fair Trade** - Transparent pricing and negotiation
-- **Digital Inclusion** - Bridging traditional and digital commerce
+**AI for Good**
+- Democratizing technology for local vendors
+- Transparent pricing and fair trade
+- Bridging traditional and digital commerce
 
 ## 📱 Implemented Features
 
 ✅ Vendor dashboard with product management  
-✅ Buyer marketplace to browse products  
-✅ Real-time chat between buyers and vendors  
-✅ AI-powered multilingual translation (8 languages)  
-✅ Smart price suggestions using market data  
-✅ Negotiation assistance with AI reply suggestions  
-✅ Chat session management with LocalStorage  
-✅ Local storage with usage monitoring  
-✅ Responsive mobile-first design  
-✅ Secure API routes (no exposed keys)
-
-## 🤝 Contributing
-
-Built for the **26 Jan Prompt Challenge**. Contributions welcome for bug reports, features, and documentation.
+✅ Buyer marketplace with search  
+✅ Real-time chat with translation  
+✅ AI price suggestions  
+✅ Negotiation assistance  
+✅ LocalStorage persistence  
+✅ Mobile-first responsive design  
+✅ Secure API routes
 
 ## 📄 License
 
