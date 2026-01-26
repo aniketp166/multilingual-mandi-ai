@@ -2,14 +2,6 @@
 // All environment variables are centralized here
 
 interface AppConfig {
-  // AI Services
-  ai: {
-    geminiApiKey?: string;
-    model: string;
-    temperature: number;
-    maxTokens: number;
-  };
-  
   // App Information
   app: {
     name: string;
@@ -69,13 +61,6 @@ const getEnvNumber = (key: string, fallback: number = 0): number => {
 
 // Main configuration object
 export const config: AppConfig = {
-  ai: {
-    geminiApiKey: getEnvVar('NEXT_PUBLIC_GEMINI_API_KEY'),
-    model: getEnvVar('NEXT_PUBLIC_GEMINI_MODEL', 'gemini-pro'),
-    temperature: getEnvNumber('NEXT_PUBLIC_GEMINI_TEMPERATURE', 0.7),
-    maxTokens: getEnvNumber('NEXT_PUBLIC_GEMINI_MAX_TOKENS', 1000),
-  },
-  
   app: {
     name: getEnvVar('NEXT_PUBLIC_APP_NAME', 'Multilingual Mandi'),
     version: getEnvVar('NEXT_PUBLIC_APP_VERSION', '1.0.0'),
@@ -112,15 +97,8 @@ export const config: AppConfig = {
 export const validateConfig = (): { isValid: boolean; errors: string[] } => {
   const errors: string[] = [];
   
-  // Check if Gemini API key is present in production
-  if (config.app.environment === 'production' && !config.ai.geminiApiKey) {
-    errors.push('NEXT_PUBLIC_GEMINI_API_KEY is required for production');
-  }
-  
-  // Warn about missing AI key in development
-  if (config.app.environment === 'development' && !config.ai.geminiApiKey) {
-    console.warn('NEXT_PUBLIC_GEMINI_API_KEY is not set - AI features will use mock responses');
-  }
+  // All configuration is now handled via secure API routes
+  // No client-side validation needed for API keys
   
   return {
     isValid: errors.length === 0,
@@ -138,17 +116,12 @@ export const logConfig = (): void => {
     console.log('Storage Config:', config.storage);
     console.log('Defaults:', config.defaults);
     console.log('UI Config:', config.ui);
-    console.log('AI Config:', { 
-      model: config.ai.model, 
-      temperature: config.ai.temperature, 
-      maxTokens: config.ai.maxTokens,
-      keyPresent: !!config.ai.geminiApiKey 
-    });
+    console.log('AI: Using secure API routes (no client-side keys)');
     console.groupEnd();
   }
 };
 
 // Export individual config sections for convenience
-export const { ai: aiConfig, app: appConfig, features, storage: storageConfig, defaults, ui: uiConfig } = config;
+export const { app: appConfig, features, storage: storageConfig, defaults, ui: uiConfig } = config;
 
 export default config;

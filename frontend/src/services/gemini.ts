@@ -1,7 +1,6 @@
 // Gemini AI Service for Multilingual Mandi Frontend
-// Direct integration with Google Gemini API
+// Secure integration via API routes (no exposed API keys)
 
-import { config } from '../config';
 import { 
   TranslationRequest, 
   TranslationResponse, 
@@ -30,88 +29,31 @@ export class GeminiError extends Error {
   }
 }
 
-// Mock responses for development when API key is not available
-const getMockTranslation = (request: TranslationRequest): TranslationResponse => ({
-  translated_text: `[MOCK] Translated: ${request.text}`,
-  original_text: request.text,
-  source_language: request.source_language,
-  target_language: request.target_language,
-  confidence: 0.95
-});
-
-const getMockPriceSuggestion = (request: PriceSuggestionRequest): PriceSuggestionResponse => ({
-  min_price: Math.max(1, request.current_price ? request.current_price * 0.8 : 20),
-  max_price: request.current_price ? request.current_price * 1.2 : 60,
-  recommended_price: request.current_price ? request.current_price * 1.05 : 40,
-  reasoning: `Based on market analysis for ${request.product_name}, considering current supply and demand factors.`,
-  market_trend: 'stable' as const,
-  confidence: 0.85
-});
-
-const getMockNegotiationSuggestions = (_request: NegotiationRequest): NegotiationResponse => ({
-  suggestions: [
-    "Thank you for your interest! I can offer a competitive price for this quality product.",
-    "Let me check what I can do for you. How about we meet in the middle?",
-    "I appreciate your business. This is a fair price considering the current market conditions."
-  ],
-  context: "Professional negotiation response",
-  tone: 'friendly' as const
-});
-
 // Gemini AI Client class
 class GeminiAIClient {
-  private apiKey: string | undefined;
-  private baseUrl = 'https://generativelanguage.googleapis.com/v1beta';
+  private baseUrl = '/api/ai';
 
   constructor() {
-    this.apiKey = config.ai.geminiApiKey;
-    
-    if (!this.apiKey && config.app.environment === 'development') {
-      console.warn('🔑 Gemini API key not found - using mock responses for development');
-    }
+    // No API key needed on frontend - handled by API routes
   }
 
-  // Check if API is available
-  private isApiAvailable(): boolean {
-    return !!this.apiKey;
-  }
-
-  // Generic Gemini API request
-  private async makeGeminiRequest(prompt: string): Promise<string> {
-    if (!this.isApiAvailable()) {
-      throw new GeminiError('Gemini API key not configured');
-    }
-
+  // Generic API request to our secure endpoints
+  private async makeApiRequest<T>(endpoint: string, data: any): Promise<GeminiResponse<T>> {
     try {
-      const response = await fetch(`${this.baseUrl}/models/gemini-pro:generateContent?key=${this.apiKey}`, {
+      const response = await fetch(`${this.baseUrl}${endpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: prompt
-            }]
-          }],
-          generationConfig: {
-            temperature: config.ai.temperature,
-            maxOutputTokens: config.ai.maxTokens,
-          }
-        })
+        body: JSON.stringify(data)
       });
 
       if (!response.ok) {
-        throw new GeminiError(`Gemini API error: ${response.status} ${response.statusText}`);
+        throw new GeminiError(`API error: ${response.status} ${response.statusText}`);
       }
 
-      const data = await response.json();
-      
-      if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
-        throw new GeminiError('Invalid response from Gemini API');
-      }
-
-      return data.candidates[0].content.parts[0].text;
+      const result = await response.json();
+      return result;
     } catch (error) {
       if (error instanceof GeminiError) {
         throw error;
@@ -123,178 +65,30 @@ class GeminiAIClient {
   // Translation service
   async translate(request: TranslationRequest): Promise<GeminiResponse<TranslationResponse>> {
     try {
-      if (!this.isApiAvailable()) {
-        return {
-          data: getMockTranslation(request),
-          success: true,
-          message: 'Using mock translation (API key not configured)'
-        };
-      }
-
-      const prompt = `Translate the following text from ${request.source_language} to ${request.target_language}. 
-      Only return the translated text, nothing else.
-      
-      Text to translate: "${request.text}"`;
-
-      const translatedText = await this.makeGeminiRequest(prompt);
-
-      const response: TranslationResponse = {
-        translated_text: translatedText.trim(),
-        original_text: request.text,
-        source_language: request.source_language,
-        target_language: request.target_language,
-        confidence: 0.9
-      };
-
-      return {
-        data: response,
-        success: true
-      };
+      return await this.makeApiRequest<TranslationResponse>('/translate', request);
     } catch (error) {
       console.error('Translation error:', error);
-      
-      // Fallback to mock response
-      return {
-        data: getMockTranslation(request),
-        success: true,
-        message: 'Using fallback translation due to API error'
-      };
+      throw error;
     }
   }
 
   // Price suggestion service
   async getPriceSuggestion(request: PriceSuggestionRequest): Promise<GeminiResponse<PriceSuggestionResponse>> {
     try {
-      if (!this.isApiAvailable()) {
-        return {
-          data: getMockPriceSuggestion(request),
-          success: true,
-          message: 'Using mock price suggestion (API key not configured)'
-        };
-      }
-
-      const prompt = `As a market analyst for Indian agricultural products, provide pricing recommendations for the following:
-
-      Product: ${request.product_name}
-      Quantity: ${request.quantity} kg
-      Current asking price: ₹${request.current_price || 'Not specified'}
-      Location: ${request.location || 'India'}
-
-      Please provide:
-      1. Minimum fair price per kg
-      2. Maximum reasonable price per kg  
-      3. Recommended selling price per kg
-      4. Brief reasoning (2-3 sentences)
-      5. Market trend (rising/falling/stable)
-
-      Format your response as JSON:
-      {
-        "min_price": number,
-        "max_price": number,
-        "recommended_price": number,
-        "reasoning": "string",
-        "market_trend": "rising|falling|stable"
-      }`;
-
-      const responseText = await this.makeGeminiRequest(prompt);
-      
-      try {
-        const parsedResponse = JSON.parse(responseText);
-        
-        const response: PriceSuggestionResponse = {
-          min_price: parsedResponse.min_price || 20,
-          max_price: parsedResponse.max_price || 60,
-          recommended_price: parsedResponse.recommended_price || 40,
-          reasoning: parsedResponse.reasoning || 'AI-generated pricing based on market analysis',
-          market_trend: parsedResponse.market_trend || 'stable',
-          confidence: 0.85
-        };
-
-        return {
-          data: response,
-          success: true
-        };
-      } catch (parseError) {
-        throw new GeminiError('Failed to parse price suggestion response');
-      }
+      return await this.makeApiRequest<PriceSuggestionResponse>('/price-suggestion', request);
     } catch (error) {
       console.error('Price suggestion error:', error);
-      
-      // Fallback to mock response
-      return {
-        data: getMockPriceSuggestion(request),
-        success: true,
-        message: 'Using fallback price suggestion due to API error'
-      };
+      throw error;
     }
   }
 
   // Negotiation assistance service
   async getNegotiationSuggestions(request: NegotiationRequest): Promise<GeminiResponse<NegotiationResponse>> {
     try {
-      if (!this.isApiAvailable()) {
-        return {
-          data: getMockNegotiationSuggestions(request),
-          success: true,
-          message: 'Using mock negotiation suggestions (API key not configured)'
-        };
-      }
-
-      const conversationHistory = request.conversation_history
-        .map(msg => `${msg.sender}: ${msg.text}`)
-        .join('\n');
-
-      const prompt = `You are helping a vendor in an Indian marketplace negotiate with a buyer. 
-
-      Product: ${request.product.name} (₹${request.product.price}/kg, ${request.product.quantity}kg available)
-      Conversation so far:
-      ${conversationHistory}
-      
-      Latest buyer message: "${request.buyer_message}"
-      
-      Generate 3 professional, culturally appropriate responses for the vendor in ${request.vendor_language}. 
-      The responses should be:
-      1. Friendly and professional
-      2. Aimed at closing the deal
-      3. Respectful of Indian business culture
-      
-      Format as JSON:
-      {
-        "suggestions": ["response1", "response2", "response3"],
-        "tone": "friendly|professional|firm"
-      }`;
-
-      const responseText = await this.makeGeminiRequest(prompt);
-      
-      try {
-        const parsedResponse = JSON.parse(responseText);
-        
-        const response: NegotiationResponse = {
-          suggestions: parsedResponse.suggestions || [
-            "Thank you for your interest in our products.",
-            "Let me see what I can offer you.",
-            "I appreciate your business."
-          ],
-          context: "AI-generated negotiation assistance",
-          tone: parsedResponse.tone || 'friendly'
-        };
-
-        return {
-          data: response,
-          success: true
-        };
-      } catch (parseError) {
-        throw new GeminiError('Failed to parse negotiation response');
-      }
+      return await this.makeApiRequest<NegotiationResponse>('/negotiation', request);
     } catch (error) {
       console.error('Negotiation suggestion error:', error);
-      
-      // Fallback to mock response
-      return {
-        data: getMockNegotiationSuggestions(request),
-        success: true,
-        message: 'Using fallback negotiation suggestions due to API error'
-      };
+      throw error;
     }
   }
 
@@ -302,8 +96,8 @@ class GeminiAIClient {
   async healthCheck(): Promise<GeminiResponse<{ status: string; service: string }>> {
     return {
       data: {
-        status: this.isApiAvailable() ? 'healthy' : 'mock_mode',
-        service: 'Gemini AI'
+        status: 'healthy',
+        service: 'Gemini AI (via secure API routes)'
       },
       success: true
     };
