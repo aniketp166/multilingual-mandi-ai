@@ -1,4 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { GoogleGenAI } from '@google/genai';
 
 interface ConversationMessage {
   sender: 'buyer' | 'vendor';
@@ -74,6 +75,8 @@ export default async function handler(
       });
     }
 
+    const genai = new GoogleGenAI({ apiKey });
+
     const conversationHistory = conversation_history
       .map(msg => `${msg.sender}: ${msg.text}`)
       .join('\n');
@@ -98,38 +101,41 @@ export default async function handler(
       "tone": "friendly|professional|firm"
     }`;
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: prompt
-          }]
-        }],
-        generationConfig: {
+    let result;
+    try {
+      // Try with gemini-2.0-flash-exp first
+      result = await genai.models.generateContent({
+        model: 'gemini-2.0-flash-exp',
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        config: {
           temperature: 0.7,
           maxOutputTokens: 1000,
         }
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`Gemini API error: ${response.status} ${response.statusText}`);
+      });
+    } catch (error) {
+      // Fallback to gemini-1.5-flash
+      result = await genai.models.generateContent({
+        model: 'gemini-1.5-flash',
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        config: {
+          temperature: 0.7,
+          maxOutputTokens: 1000,
+        }
+      });
     }
 
-    const data = await response.json();
+    // Extract text - it's a property, not a method
+    const responseText = result.text || '';
     
-    if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
-      throw new Error('Invalid response from Gemini API');
+    // Extract JSON from response (handle markdown code blocks)
+    let jsonText = responseText;
+    const jsonMatch = responseText.match(/```json\n([\s\S]*?)\n```/) || responseText.match(/```\n([\s\S]*?)\n```/);
+    if (jsonMatch) {
+      jsonText = jsonMatch[1];
     }
-
-    const responseText = data.candidates[0].content.parts[0].text;
     
     try {
-      const parsedResponse = JSON.parse(responseText);
+      const parsedResponse = JSON.parse(jsonText);
       
       const negotiationResponse: NegotiationResponse = {
         suggestions: parsedResponse.suggestions || [

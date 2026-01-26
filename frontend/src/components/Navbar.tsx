@@ -8,7 +8,8 @@ const Navbar: React.FC = () => {
 
   const navigation = [
     { name: 'Home', href: '/' },
-    { name: 'Dashboard', href: '/dashboard' },
+    { name: 'Vendor Dashboard', href: '/dashboard' },
+    { name: 'Browse Products', href: '/buyer' },
     { name: 'About', href: '/about' },
     { name: 'Contact', href: '/contact' },
   ];
@@ -16,7 +17,7 @@ const Navbar: React.FC = () => {
   const isActive = (href: string) => router.pathname === href;
 
   return (
-    <nav className="bg-white shadow-lg sticky top-0 z-50">
+    <nav className="bg-white shadow-lg sticky top-0 z-50 mb-0">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-20 md:h-16">
           {/* Logo */}

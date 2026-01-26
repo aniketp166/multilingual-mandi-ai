@@ -1,4 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
+import { GoogleGenAI } from '@google/genai';
 
 interface TranslationRequest {
   text: string;
@@ -61,40 +62,38 @@ export default async function handler(
       });
     }
 
+    const genai = new GoogleGenAI({ apiKey });
+    
     const prompt = `Translate the following text from ${source_language} to ${target_language}. 
     Only return the translated text, nothing else.
     
     Text to translate: "${text}"`;
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: prompt
-          }]
-        }],
-        generationConfig: {
-          temperature: 0.7,
+    let result;
+    try {
+      // Try with gemini-2.0-flash-exp first
+      result = await genai.models.generateContent({
+        model: 'gemini-2.0-flash-exp',
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        config: {
+          temperature: 0.3,
           maxOutputTokens: 1000,
         }
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`Gemini API error: ${response.status} ${response.statusText}`);
+      });
+    } catch (error) {
+      // Fallback to gemini-1.5-flash
+      result = await genai.models.generateContent({
+        model: 'gemini-1.5-flash',
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        config: {
+          temperature: 0.3,
+          maxOutputTokens: 1000,
+        }
+      });
     }
 
-    const data = await response.json();
-    
-    if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
-      throw new Error('Invalid response from Gemini API');
-    }
-
-    const translatedText = data.candidates[0].content.parts[0].text;
+    // Extract text - it's a property, not a method
+    const translatedText = result.text || '';
 
     const translationResponse: TranslationResponse = {
       translated_text: translatedText.trim(),

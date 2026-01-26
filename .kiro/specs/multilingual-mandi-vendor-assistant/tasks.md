@@ -93,20 +93,20 @@ This streamlined implementation plan focuses on a frontend-only solution using N
     - ✅ Implement fallback pricing logic
     - _Requirements: 3.3, 3.4_
 
-- [ ] 8. Build chat and negotiation system
-  - [ ] 8.1 Create NegotiationChat component
+- [x] 8. Build chat and negotiation system
+  - [x] 8.1 Create NegotiationChat component
     - Real-time chat interface with message bubbles
     - Display translated messages with original text toggle
     - Message history stored in LocalStorage
     - _Requirements: 5.1, 5.2, 5.3, 5.4_
   
-  - [ ] 8.2 Implement negotiation assistance
+  - [x] 8.2 Implement negotiation assistance
     - AI reply suggestions using Gemini API
     - Allow editing of suggested replies before sending
     - Handle suggestion generation failures
     - _Requirements: 4.1, 4.2, 4.3, 4.5_
   
-  - [ ] 8.3 Add chat session management
+  - [x] 8.3 Add chat session management
     - Create and manage chat sessions in LocalStorage
     - Preserve conversation state during inactivity
     - Handle multiple concurrent chats

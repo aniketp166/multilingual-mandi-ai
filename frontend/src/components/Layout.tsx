@@ -23,7 +23,7 @@ const Layout: React.FC<LayoutProps> = ({
       </Head>
       <div className="min-h-screen bg-gray-50">
         <Navbar />
-        <main>{children}</main>
+        <main className="pt-0">{children}</main>
       </div>
     </>
   );

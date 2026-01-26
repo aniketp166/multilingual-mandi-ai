@@ -3,8 +3,9 @@ import Layout from '../src/components/Layout';
 import ProductCard from '../src/components/ProductCard';
 import AddProductModal from '../src/components/AddProductModal';
 import PriceSuggestionModal from '../src/components/PriceSuggestionModal';
+import NegotiationChat from '../src/components/NegotiationChat';
 import { storage } from '../src/utils/storage';
-import { Product, ProductInput } from '../src/types';
+import { Product, ProductInput, ChatSession, Message } from '../src/types';
 import { config } from '../src/config';
 
 const Dashboard: React.FC = () => {
@@ -14,13 +15,23 @@ const Dashboard: React.FC = () => {
   const [isPriceSuggestionModalOpen, setIsPriceSuggestionModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isAddingProduct, setIsAddingProduct] = useState(false);
+  const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
+  const [activeChatSession, setActiveChatSession] = useState<ChatSession | null>(null);
+  const [vendorLanguage, setVendorLanguage] = useState('en');
 
-  // Load products from storage on component mount
   useEffect(() => {
     const loadProducts = () => {
       try {
         const storedProducts = storage.getProducts();
         setProducts(storedProducts);
+        const storedChatSessions = storage.getChatSessions();
+        setChatSessions(storedChatSessions.filter(s => s.status === 'active'));
+        
+        // Load vendor language preference
+        const prefs = storage.getUserPreferences();
+        if (prefs.language) {
+          setVendorLanguage(prefs.language);
+        }
       } catch (error) {
         console.error('Error loading products:', error);
       } finally {
@@ -31,61 +42,46 @@ const Dashboard: React.FC = () => {
     loadProducts();
   }, []);
 
-  // Add new product with duplicate prevention
-  const handleAddProduct = (productInput: ProductInput) => {
-    console.log('🔵 handleAddProduct called with:', productInput);
-    console.log('🔵 isAddingProduct state:', isAddingProduct);
-    console.log('🔵 Current products count:', products.length);
+  const handleLanguageChange = (newLanguage: string) => {
+    setVendorLanguage(newLanguage);
+    storage.updateUserPreferences({ language: newLanguage });
+  };
 
+  const handleAddProduct = (productInput: ProductInput) => {
     if (isAddingProduct) {
-      console.log('🔴 Already adding product, ignoring duplicate request');
       return;
     }
-
-    // Check for duplicate product names
-    const existingProduct = products.find(p =>
+    
+    const existingProduct = products.find(p => 
       p.name.toLowerCase().trim() === productInput.name.toLowerCase().trim()
     );
-
+    
     if (existingProduct) {
-      console.log('🔴 Duplicate product name found:', existingProduct);
       alert(`A product named "${productInput.name}" already exists. Please use a different name.`);
       return;
     }
-
-    console.log('🟡 Setting isAddingProduct to true');
+    
     setIsAddingProduct(true);
-
+    
     try {
-      console.log('🟢 Adding product to storage:', productInput);
-
       const newProduct = storage.addProduct({
         ...productInput,
         currency: config.defaults.currency,
       });
 
-      console.log('🟢 Product added to storage successfully:', newProduct);
-      console.log('🟢 Reloading products from storage to ensure consistency...');
-
-      // Instead of manually updating state, reload from storage to ensure consistency
       const updatedProducts = storage.getProducts();
-      console.log('🟢 Reloaded products from storage:', updatedProducts.length);
       setProducts(updatedProducts);
-
+      
     } catch (error) {
-      console.error('🔴 Error adding product:', error);
+      console.error('Error adding product:', error);
       alert('Failed to add product. Please try again.');
     } finally {
-      // Reset the flag after a short delay to prevent rapid double-clicks
-      console.log('🟡 Resetting isAddingProduct flag in 500ms');
       setTimeout(() => {
-        console.log('🟡 Resetting isAddingProduct to false');
         setIsAddingProduct(false);
       }, 500);
     }
   };
 
-  // Add sample product for demo
   const addSampleProduct = () => {
     const sampleProducts = [
       { name: 'Tomato', quantity: 50, price: 40, language: 'en' },
@@ -96,7 +92,7 @@ const Dashboard: React.FC = () => {
     ];
 
     const randomSample = sampleProducts[Math.floor(Math.random() * sampleProducts.length)];
-
+    
     const newProduct = storage.addProduct({
       ...randomSample,
       currency: config.defaults.currency,
@@ -105,7 +101,6 @@ const Dashboard: React.FC = () => {
     setProducts(prev => [...prev, newProduct]);
   };
 
-  // Handle product deletion
   const handleDeleteProduct = (productId: string) => {
     const success = storage.deleteProduct(productId);
     if (success) {
@@ -113,24 +108,20 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  // Handle product editing (placeholder)
   const handleEditProduct = (product: Product) => {
-    // TODO: Open edit modal
     console.log('Edit product:', product);
   };
 
-  // Handle price suggestion
   const handlePriceSuggest = (product: Product) => {
     setSelectedProduct(product);
     setIsPriceSuggestionModalOpen(true);
   };
 
-  // Handle price acceptance from modal
   const handleAcceptPrice = (newPrice: number) => {
     if (selectedProduct) {
       const updatedProduct = { ...selectedProduct, price: newPrice, updated_at: new Date().toISOString() };
       const success = storage.updateProductByObject(updatedProduct);
-
+      
       if (success) {
         setProducts(prev => prev.map(p => p.id === selectedProduct.id ? updatedProduct : p));
       }
@@ -139,14 +130,76 @@ const Dashboard: React.FC = () => {
     setSelectedProduct(null);
   };
 
-  // Get storage info
+  const handleOpenChat = (session: ChatSession) => {
+    const product = products.find(p => p.id === session.product_id);
+    if (product) {
+      setSelectedProduct(product);
+      setActiveChatSession(session);
+    }
+  };
+
+  const handleSendMessage = async (messageText: string) => {
+    if (!activeChatSession || !selectedProduct) return;
+
+    const newMessage: Message = {
+      id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      sender: 'vendor',
+      text: messageText,
+      language: vendorLanguage,
+      timestamp: new Date().toISOString()
+    };
+
+    // Translate message to buyer's language if different
+    // For now, we'll assume buyer language from the last buyer message
+    const lastBuyerMessage = activeChatSession.messages
+      .filter(m => m.sender === 'buyer')
+      .pop();
+    
+    if (lastBuyerMessage && lastBuyerMessage.language !== vendorLanguage) {
+      try {
+        const response = await fetch('/api/ai/translate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text: messageText,
+            source_language: vendorLanguage,
+            target_language: lastBuyerMessage.language
+          })
+        });
+
+        const data = await response.json();
+        if (data.success && data.data) {
+          newMessage.translated_text = data.data.translated_text;
+        }
+      } catch (error) {
+        console.error('Translation error:', error);
+      }
+    }
+
+    // Update chat session with new message
+    const updatedMessages = [...activeChatSession.messages, newMessage];
+    const updatedSession = storage.updateChatSession(activeChatSession.id, {
+      messages: updatedMessages
+    });
+
+    if (updatedSession) {
+      setActiveChatSession(updatedSession);
+      setChatSessions(prev => prev.map(s => s.id === updatedSession.id ? updatedSession : s));
+    }
+  };
+
+  const handleCloseChat = () => {
+    setActiveChatSession(null);
+    setSelectedProduct(null);
+  };
+
   const storageInfo = storage.getStorageInfo();
   const storageUsedPercent = (storageInfo.used / storageInfo.total) * 100;
 
   if (loading) {
     return (
       <Layout title="Dashboard - Multilingual Mandi" description="Manage your products and get AI-powered insights">
-        <div className="container mx-auto px-4 py-16">
+        <div className="max-w-7xl mx-auto px-6 py-16">
           <div className="flex items-center justify-center min-h-64">
             <div className="text-center">
               <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mb-4"></div>
@@ -160,57 +213,75 @@ const Dashboard: React.FC = () => {
 
   return (
     <Layout title="Vendor Dashboard - Multilingual Mandi" description="Manage your products and get AI-powered insights">
-      <div className="min-h-screen">
+      <div className="min-h-screen bg-gray-50">
         {/* Hero Section */}
         <div className="bg-gradient-to-br from-emerald-600 via-emerald-700 to-orange-500 text-white relative overflow-hidden">
-          {/* Background Pattern */}
           <div className="absolute inset-0 opacity-10">
             <div className="absolute inset-0" style={{
               backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
             }}></div>
           </div>
-
-          <div className="container mx-auto px-4 pt-12 pb-24 sm:py-20 lg:py-32 relative">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-              <div className="mb-6 sm:mb-8 lg:mb-0">
-                <div className="flex flex-col items-center justify-center mb-6 sm:mb-8 text-center sm:text-left lg:items-start">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white/20 backdrop-blur-sm rounded-3xl flex items-center justify-center mb-6 lg:mb-0 lg:mr-4 shadow-xl">
-                    <span className="text-4xl sm:text-5xl text-white drop-shadow-2xl">🛒</span>
+          
+          <div className="max-w-7xl mx-auto px-6 py-12 sm:py-16 relative">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
+              <div className="flex-1">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center flex-shrink-0">
+                    <span className="text-3xl sm:text-4xl">🛒</span>
                   </div>
-                  <div className="mt-4 lg:mt-6">
-                    <h1 className="text-3xl sm:text-4xl lg:text-6xl font-black mb-3 tracking-tighter text-center lg:text-left">
+                  <div className="flex-1">
+                    <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold leading-tight">
                       Welcome to Your Dashboard
                     </h1>
-                    <p className="text-white/95 text-sm sm:text-base font-bold tracking-[0.2em] uppercase text-center lg:text-left">
+                    <p className="text-white/80 text-sm sm:text-base font-medium mt-1">
                       मल्टीलिंगुअल मंडी • Multilingual Mandi
                     </p>
                   </div>
                 </div>
-                <p className="text-white/95 text-sm sm:text-base lg:text-xl max-w-2xl leading-relaxed text-center sm:text-left px-4 sm:px-0 mb-8 sm:mb-0">
+                <p className="text-white/90 text-base sm:text-lg leading-relaxed max-w-2xl mb-4">
                   Manage your products, get AI-powered pricing insights, and communicate with buyers across language barriers.
-                  <span className="block mt-3 text-white/80 text-xs sm:text-sm lg:text-base font-medium">
+                  <span className="block mt-2 text-white/70 text-sm sm:text-base">
                     🇮🇳 Empowering local markets with cutting-edge technology
                   </span>
                 </p>
+                
+                {/* Language Selector */}
+                <div className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-xl p-4 max-w-md">
+                  <span className="text-white/90 font-semibold text-sm">Your Language:</span>
+                  <select
+                    value={vendorLanguage}
+                    onChange={(e) => handleLanguageChange(e.target.value)}
+                    className="flex-1 px-4 py-2 bg-white/20 backdrop-blur-sm text-white border border-white/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-white/50 font-medium"
+                  >
+                    <option value="en" className="text-gray-900">English</option>
+                    <option value="hi" className="text-gray-900">हिंदी (Hindi)</option>
+                    <option value="ta" className="text-gray-900">தமிழ் (Tamil)</option>
+                    <option value="te" className="text-gray-900">తెలుగు (Telugu)</option>
+                    <option value="bn" className="text-gray-900">বাংলা (Bengali)</option>
+                    <option value="mr" className="text-gray-900">मराठी (Marathi)</option>
+                    <option value="gu" className="text-gray-900">ગુજરાતી (Gujarati)</option>
+                    <option value="kn" className="text-gray-900">ಕನ್ನಡ (Kannada)</option>
+                  </select>
+                </div>
               </div>
-
-              <div className="flex flex-col gap-4 sm:gap-4 px-4 sm:px-0">
+              
+              <div className="flex flex-col gap-3 lg:flex-shrink-0 lg:w-64">
                 <button
                   onClick={() => setIsAddModalOpen(true)}
-                  className="w-full sm:w-auto px-4 sm:px-6 py-3 sm:py-4 bg-white text-emerald-700 font-bold rounded-xl sm:rounded-2xl shadow-lg sm:shadow-2xl hover:shadow-xl sm:hover:shadow-3xl hover:bg-emerald-50 transition-all duration-300 transform hover:-translate-y-1 sm:hover:-translate-y-2"
+                  className="w-full px-6 py-4 bg-white text-emerald-700 font-bold rounded-xl shadow-lg hover:shadow-xl hover:bg-emerald-50 transition-all duration-200 transform hover:-translate-y-1"
                 >
-                  <span className="flex items-center justify-center space-x-2 sm:space-x-3">
-                    <span className="text-xl sm:text-2xl">➕</span>
-                    <span className="text-sm sm:text-base">Add Product</span>
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="text-xl">➕</span>
+                    <span>Add Product</span>
                   </span>
                 </button>
                 <button
                   onClick={addSampleProduct}
-                  className="w-full sm:w-auto px-4 sm:px-6 py-3 sm:py-4 bg-white/20 backdrop-blur-sm text-white font-bold rounded-xl sm:rounded-2xl border-2 border-white/30 hover:bg-white/30 transition-all duration-300 transform hover:-translate-y-1"
+                  className="w-full px-6 py-4 bg-white/20 backdrop-blur-sm text-white font-bold rounded-xl border-2 border-white/30 hover:bg-white/30 transition-all duration-200"
                 >
-                  <span className="flex items-center justify-center space-x-2 sm:space-x-3">
-                    <span className="text-xl sm:text-2xl">🎯</span>
-                    <span className="text-sm sm:text-base">Try Sample</span>
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="text-xl">🎯</span>
+                    <span>Try Sample</span>
                   </span>
                 </button>
               </div>
@@ -220,47 +291,64 @@ const Dashboard: React.FC = () => {
 
         {/* Stats Cards */}
         {products.length > 0 && (
-          <div className="container mx-auto px-4 -mt-12 sm:-mt-16 lg:-mt-20 relative z-10">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-6 lg:gap-8">
-              <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-2xl p-4 sm:p-6 lg:p-8 border border-gray-100 hover:shadow-xl sm:hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1">
+          <div className="max-w-7xl mx-auto px-6 -mt-8 sm:-mt-10 relative z-10">
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 sm:gap-6">
+              <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100 hover:shadow-2xl transition-shadow duration-200">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-gray-500 text-[10px] font-semibold uppercase tracking-wide">Total Products</p>
-                    <p className="text-lg sm:text-2xl lg:text-4xl font-bold text-gray-900 mt-0.5">{products.length}</p>
-                    <p className="text-emerald-600 text-[10px] font-medium mt-0.5">Active listings</p>
+                  <div className="flex-1">
+                    <p className="text-gray-500 text-xs font-semibold uppercase tracking-wide mb-2">Total Products</p>
+                    <p className="text-3xl sm:text-4xl font-bold text-gray-900">{products.length}</p>
+                    <p className="text-emerald-600 text-sm font-medium mt-1">Active listings</p>
                   </div>
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg">
-                    <span className="text-lg sm:text-2xl lg:text-3xl">📦</span>
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-2xl flex items-center justify-center flex-shrink-0">
+                    <span className="text-2xl sm:text-3xl">📦</span>
                   </div>
                 </div>
               </div>
-
-              <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-2xl p-4 sm:p-6 lg:p-8 border border-gray-100 hover:shadow-xl sm:hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1">
+              
+              <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100 hover:shadow-2xl transition-shadow duration-200">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-gray-500 text-[10px] font-semibold uppercase tracking-wide">Total Value</p>
-                    <p className="text-lg sm:text-2xl lg:text-4xl font-bold text-emerald-600 mt-0.5">
+                  <div className="flex-1">
+                    <p className="text-gray-500 text-xs font-semibold uppercase tracking-wide mb-2">Total Value</p>
+                    <p className="text-3xl sm:text-4xl font-bold text-emerald-600">
                       ₹{products.reduce((sum, p) => sum + (p.price * p.quantity), 0).toLocaleString()}
                     </p>
-                    <p className="text-gray-600 text-[10px] font-medium mt-0.5">Inventory worth</p>
+                    <p className="text-gray-600 text-sm font-medium mt-1">Inventory worth</p>
                   </div>
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg">
-                    <span className="text-lg sm:text-2xl lg:text-3xl">💰</span>
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-2xl flex items-center justify-center flex-shrink-0">
+                    <span className="text-2xl sm:text-3xl">💰</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100 hover:shadow-2xl transition-shadow duration-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <p className="text-gray-500 text-xs font-semibold uppercase tracking-wide mb-2">Total Quantity</p>
+                    <p className="text-3xl sm:text-4xl font-bold text-blue-600">
+                      {products.reduce((sum, p) => sum + p.quantity, 0)} kg
+                    </p>
+                    <p className="text-gray-600 text-sm font-medium mt-1">Available stock</p>
+                  </div>
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl flex items-center justify-center flex-shrink-0">
+                    <span className="text-2xl sm:text-3xl">⚖️</span>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-2xl p-4 sm:p-6 lg:p-8 border border-gray-100 hover:shadow-xl sm:hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1">
+              <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100 hover:shadow-2xl transition-shadow duration-200 cursor-pointer" onClick={() => chatSessions.length > 0 && handleOpenChat(chatSessions[0])}>
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-gray-500 text-[10px] font-semibold uppercase tracking-wide">Total Quantity</p>
-                    <p className="text-lg sm:text-2xl lg:text-4xl font-bold text-blue-600 mt-0.5">
-                      {products.reduce((sum, p) => sum + p.quantity, 0)} kg
+                  <div className="flex-1">
+                    <p className="text-gray-500 text-xs font-semibold uppercase tracking-wide mb-2">Active Chats</p>
+                    <p className="text-3xl sm:text-4xl font-bold text-orange-600">
+                      {chatSessions.length}
                     </p>
-                    <p className="text-gray-600 text-[10px] font-medium mt-0.5">Available stock</p>
+                    <p className="text-gray-600 text-sm font-medium mt-1">
+                      {chatSessions.length > 0 ? 'Click to view' : 'No messages'}
+                    </p>
                   </div>
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg">
-                    <span className="text-lg sm:text-2xl lg:text-3xl">⚖️</span>
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-orange-100 to-orange-200 rounded-2xl flex items-center justify-center flex-shrink-0">
+                    <span className="text-2xl sm:text-3xl">💬</span>
                   </div>
                 </div>
               </div>
@@ -269,26 +357,26 @@ const Dashboard: React.FC = () => {
         )}
 
         {/* Main Content */}
-        <div className="container mx-auto px-4 py-8 sm:py-12">
+        <div className="max-w-7xl mx-auto px-6 py-12 sm:py-16">
           {/* Storage Usage Indicator */}
           {storageUsedPercent > 50 && (
-            <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg sm:rounded-xl p-4 sm:p-6 mb-6 sm:mb-8">
-              <div className="flex items-center justify-between flex-col sm:flex-row gap-4 sm:gap-0">
-                <div className="flex items-center space-x-3 sm:space-x-4">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-amber-100 rounded-lg flex items-center justify-center">
-                    <span className="text-xl sm:text-2xl">⚠️</span>
+            <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-6 mb-8">
+              <div className="flex items-center justify-between flex-col sm:flex-row gap-4">
+                <div className="flex items-center gap-4 flex-1">
+                  <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <span className="text-2xl">⚠️</span>
                   </div>
                   <div>
-                    <h3 className="text-base sm:text-lg font-semibold text-amber-800">
+                    <h3 className="text-lg font-semibold text-amber-800">
                       Storage Usage: {storageUsedPercent.toFixed(1)}%
                     </h3>
-                    <p className="text-sm sm:text-base text-amber-700">
+                    <p className="text-sm text-amber-700">
                       {(storageInfo.used / 1024).toFixed(1)} KB used of {(storageInfo.total / 1024).toFixed(1)} KB
                     </p>
                   </div>
                 </div>
                 <div className="w-full sm:w-32 h-3 bg-amber-200 rounded-full overflow-hidden">
-                  <div
+                  <div 
                     className="h-full bg-gradient-to-r from-amber-400 to-orange-500 transition-all duration-500"
                     style={{ width: `${Math.min(storageUsedPercent, 100)}%` }}
                   />
@@ -300,26 +388,26 @@ const Dashboard: React.FC = () => {
           {/* Products Grid */}
           {products.length === 0 ? (
             <div className="text-center py-16 sm:py-24">
-              <div className="max-w-lg mx-auto px-4">
-                <div className="w-24 h-24 sm:w-32 sm:h-32 bg-gradient-to-br from-emerald-100 via-emerald-200 to-emerald-300 rounded-full flex items-center justify-center mx-auto mb-6 sm:mb-8 shadow-lg sm:shadow-2xl">
-                  <span className="text-4xl sm:text-6xl">📦</span>
+              <div className="max-w-lg mx-auto">
+                <div className="w-24 h-24 sm:w-32 sm:h-32 bg-gradient-to-br from-emerald-100 via-emerald-200 to-emerald-300 rounded-full flex items-center justify-center mx-auto mb-8 shadow-2xl">
+                  <span className="text-5xl sm:text-6xl">📦</span>
                 </div>
-                <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 sm:mb-6">
+                <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">
                   Ready to start selling?
                 </h3>
-                <p className="text-gray-600 mb-8 sm:mb-10 leading-relaxed text-base sm:text-lg">
+                <p className="text-gray-600 mb-10 leading-relaxed text-base sm:text-lg px-4">
                   Create your first product listing and join thousands of vendors using AI-powered tools to grow their business.
                   <span className="block mt-2 text-emerald-600 font-semibold">
                     🚀 Get started in seconds!
                   </span>
                 </p>
-                <div className="space-y-4 sm:space-y-6">
+                <div className="space-y-4 px-4">
                   <button
                     onClick={() => setIsAddModalOpen(true)}
-                    className="w-full sm:w-auto px-8 sm:px-10 py-4 sm:py-5 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-bold rounded-xl sm:rounded-2xl shadow-lg sm:shadow-2xl hover:shadow-xl sm:hover:shadow-3xl hover:from-emerald-600 hover:to-emerald-700 transition-all duration-300 transform hover:-translate-y-1 sm:hover:-translate-y-2 text-base sm:text-lg"
+                    className="w-full sm:w-auto px-10 py-5 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-bold rounded-2xl shadow-2xl hover:shadow-3xl hover:from-emerald-600 hover:to-emerald-700 transition-all duration-300 transform hover:-translate-y-2 text-lg"
                   >
-                    <span className="flex items-center justify-center space-x-2 sm:space-x-3">
-                      <span className="text-xl sm:text-2xl">🚀</span>
+                    <span className="flex items-center justify-center gap-3">
+                      <span className="text-2xl">🚀</span>
                       <span>Add Your First Product</span>
                     </span>
                   </button>
@@ -331,18 +419,18 @@ const Dashboard: React.FC = () => {
             </div>
           ) : (
             <>
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-10 gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
                 <div>
                   <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Your Products</h2>
                   <p className="text-gray-600 text-base sm:text-lg">Manage your inventory and get AI insights</p>
                 </div>
-                <div className="flex items-center justify-between sm:justify-end space-x-4">
+                <div className="flex items-center justify-between sm:justify-end gap-4">
                   <span className="text-sm text-gray-500 bg-gray-100 px-3 py-2 rounded-full font-medium">
                     {products.length} products
                   </span>
                   <button
                     onClick={() => setIsAddModalOpen(true)}
-                    className="hidden sm:flex px-4 py-2 sm:px-6 sm:py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-semibold rounded-lg sm:rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-1 items-center space-x-2"
+                    className="hidden sm:flex px-4 py-2 sm:px-6 sm:py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-semibold rounded-lg sm:rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-1 items-center gap-2"
                   >
                     <span>➕</span>
                     <span>Add Product</span>
@@ -350,7 +438,7 @@ const Dashboard: React.FC = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                 {products.map((product) => (
                   <div key={product.id}>
                     <ProductCard
@@ -367,8 +455,8 @@ const Dashboard: React.FC = () => {
 
           {/* Development Tools */}
           {config.app.environment === 'development' && (
-            <div className="mt-16 bg-gray-50 rounded-xl p-6 border border-gray-200">
-              <h4 className="text-lg font-semibold mb-4 text-gray-800 flex items-center space-x-2">
+            <div className="mt-16 bg-gray-100 rounded-xl p-6 border border-gray-200">
+              <h4 className="text-lg font-semibold mb-4 text-gray-800 flex items-center gap-2">
                 <span>🛠️</span>
                 <span>Development Tools</span>
               </h4>
@@ -421,14 +509,12 @@ const Dashboard: React.FC = () => {
           <span className="text-2xl">➕</span>
         </button>
 
-        {/* Add Product Modal */}
         <AddProductModal
           isOpen={isAddModalOpen}
           onClose={() => setIsAddModalOpen(false)}
           onSubmit={handleAddProduct}
         />
 
-        {/* Price Suggestion Modal */}
         {selectedProduct && (
           <PriceSuggestionModal
             isOpen={isPriceSuggestionModalOpen}
@@ -438,6 +524,18 @@ const Dashboard: React.FC = () => {
             }}
             product={selectedProduct}
             onAcceptPrice={handleAcceptPrice}
+          />
+        )}
+
+        {/* Chat Modal */}
+        {activeChatSession && selectedProduct && (
+          <NegotiationChat
+            chatSession={activeChatSession}
+            product={selectedProduct}
+            onSendMessage={handleSendMessage}
+            onClose={handleCloseChat}
+            userRole="vendor"
+            userLanguage={vendorLanguage}
           />
         )}
       </div>

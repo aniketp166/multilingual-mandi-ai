@@ -142,3 +142,99 @@ The Multilingual Mandi - Vendor Assistant is a frontend-only web application tha
 3. WHEN LocalStorage operations fail, THE System SHALL attempt retry with exponential backoff
 4. THE System SHALL display user-friendly error messages that explain the issue and suggest solutions
 5. WHEN critical errors occur, THE System SHALL preserve user data in LocalStorage and provide recovery options
+
+### Requirement 11: Buyer Product Discovery
+
+**User Story:** As a buyer, I want to browse and search available products, so that I can find items I'm interested in purchasing.
+
+#### Acceptance Criteria
+
+1. WHEN a buyer accesses the marketplace, THE System SHALL display all active product listings in a grid layout
+2. WHEN a buyer searches for products, THE System SHALL filter results based on product name matching the search query
+3. WHEN a buyer views product details, THE System SHALL display product name, quantity, price, and vendor information
+4. THE System SHALL support filtering products by price range and availability
+5. WHEN no products match search criteria, THE System SHALL display a helpful message suggesting alternative searches
+
+### Requirement 12: Buyer-Vendor Communication Initiation
+
+**User Story:** As a buyer, I want to initiate conversations with vendors about products, so that I can ask questions and negotiate prices.
+
+#### Acceptance Criteria
+
+1. WHEN a buyer clicks on a product, THE System SHALL display a "Contact Vendor" button
+2. WHEN a buyer initiates contact, THE System SHALL create a new Chat_Session linking the buyer, vendor, and product
+3. WHEN a chat session is created, THE System SHALL open the chat interface with the product context visible
+4. THE System SHALL allow buyers to send an initial message along with the contact request
+5. WHEN a vendor receives a contact request, THE System SHALL notify them and display the buyer's initial message
+
+### Requirement 13: Real-Time Chat Interface
+
+**User Story:** As a buyer or vendor, I want a real-time chat interface, so that I can communicate efficiently during negotiations.
+
+#### Acceptance Criteria
+
+1. WHEN a chat session is active, THE System SHALL display messages in chronological order with timestamps
+2. WHEN a new message is sent, THE System SHALL display it immediately in the chat interface
+3. WHEN viewing chat history, THE System SHALL show both original and translated messages with language indicators
+4. THE System SHALL display typing indicators when the other party is composing a message
+5. WHEN a chat session is reopened, THE System SHALL restore the complete message history from LocalStorage
+
+### Requirement 14: Active Negotiation Flow
+
+**User Story:** As a buyer, I want to make counter-offers during negotiations, so that I can negotiate prices effectively with vendors.
+
+#### Acceptance Criteria
+
+1. WHEN viewing a product in chat context, THE System SHALL display the current asking price prominently
+2. WHEN a buyer wants to make an offer, THE System SHALL provide a quick action button to propose a counter-price
+3. WHEN a counter-offer is made, THE System SHALL display it as a special message type with the proposed price
+4. THE System SHALL track all offers and counter-offers in the negotiation history
+5. WHEN an offer is made, THE System SHALL display AI-suggested responses to the vendor
+
+### Requirement 15: Negotiation Decision Actions
+
+**User Story:** As a vendor, I want to accept, reject, or counter buyer offers, so that I can manage negotiations effectively.
+
+#### Acceptance Criteria
+
+1. WHEN a vendor receives a buyer offer, THE System SHALL display Accept, Reject, and Counter action buttons
+2. WHEN a vendor accepts an offer, THE System SHALL mark the negotiation as completed and display a success message
+3. WHEN a vendor rejects an offer, THE System SHALL allow them to provide a reason and suggest an alternative price
+4. WHEN a vendor makes a counter-offer, THE System SHALL send it to the buyer with AI-generated reasoning
+5. THE System SHALL maintain a complete history of all negotiation actions in the Chat_Session
+
+### Requirement 16: AI-Powered Negotiation Context
+
+**User Story:** As a vendor, I want AI suggestions that consider the negotiation context, so that I can respond strategically to buyer offers.
+
+#### Acceptance Criteria
+
+1. WHEN a buyer makes an offer, THE Gemini_AI_Service SHALL analyze the offer against market prices and product details
+2. WHEN generating negotiation suggestions, THE System SHALL consider the offer amount, product value, and conversation history
+3. THE Gemini_AI_Service SHALL provide suggestions for accepting, rejecting, or countering with specific price points
+4. WHEN displaying AI suggestions, THE System SHALL explain the reasoning behind each recommendation
+5. THE System SHALL allow vendors to customize AI suggestions before sending responses
+
+### Requirement 17: Negotiation History Tracking
+
+**User Story:** As a buyer or vendor, I want to see the complete negotiation history, so that I can track the progression of price discussions.
+
+#### Acceptance Criteria
+
+1. WHEN viewing a chat session, THE System SHALL display a negotiation timeline showing all offers and counter-offers
+2. WHEN an offer is made, THE System SHALL record the timestamp, amount, and party who made the offer
+3. THE System SHALL visually distinguish between regular messages and negotiation actions
+4. WHEN a negotiation is completed, THE System SHALL display the final agreed price and mark the session as closed
+5. THE LocalStorage_Manager SHALL persist all negotiation history for future reference
+
+### Requirement 18: Chat Session Management
+
+**User Story:** As a buyer or vendor, I want to manage multiple chat sessions, so that I can handle conversations with different parties efficiently.
+
+#### Acceptance Criteria
+
+1. WHEN a user has multiple active chats, THE System SHALL display a list of all chat sessions with preview information
+2. WHEN viewing the chat list, THE System SHALL show the product name, other party's name, and last message preview
+3. WHEN a new message arrives in an inactive chat, THE System SHALL display a notification indicator
+4. THE System SHALL allow users to search and filter their chat sessions by product name or party name
+5. WHEN a chat session is inactive for 7 days, THE System SHALL archive it while preserving the complete history
