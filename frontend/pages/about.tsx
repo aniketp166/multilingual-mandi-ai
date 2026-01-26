@@ -3,7 +3,7 @@ import Layout from '../src/components/Layout';
 
 const About: React.FC = () => {
   return (
-    <Layout 
+    <Layout
       title="About - Multilingual Mandi"
       description="Learn about Multilingual Mandi - Breaking language barriers in local trade"
     >
@@ -20,7 +20,7 @@ const About: React.FC = () => {
               About Multilingual Mandi
             </h1>
             <p className="text-xl lg:text-2xl text-emerald-100 leading-relaxed">
-              Empowering India's local vendors with AI-driven tools that break language barriers 
+              Empowering India&apos;s local vendors with AI-driven tools that break language barriers
               and enable fair, transparent trade across diverse communities.
             </p>
           </div>
@@ -38,8 +38,8 @@ const About: React.FC = () => {
                 </div>
                 <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-4">Our Mission</h2>
                 <p className="text-gray-700 text-lg leading-relaxed">
-                  To democratize technology for India's local markets, making advanced AI 
-                  accessible to traditional traders and fostering inclusive economic growth 
+                  To democratize technology for India&apos;s local markets, making advanced AI
+                  accessible to traditional traders and fostering inclusive economic growth
                   across all communities.
                 </p>
               </div>
@@ -50,8 +50,8 @@ const About: React.FC = () => {
                 </div>
                 <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-4">Our Vision</h2>
                 <p className="text-gray-700 text-lg leading-relaxed">
-                  A Viksit Bharat where every trader, regardless of language or location, 
-                  can participate in fair and transparent commerce with AI assistance 
+                  A Viksit Bharat where every trader, regardless of language or location,
+                  can participate in fair and transparent commerce with AI assistance
                   and digital empowerment.
                 </p>
               </div>
@@ -82,7 +82,7 @@ const About: React.FC = () => {
                   Real-time Translation
                 </h3>
                 <p className="text-gray-600 leading-relaxed">
-                  Instant translation between Hindi, English, and regional languages. 
+                  Instant translation between Hindi, English, and regional languages.
                   Communicate seamlessly with customers across linguistic boundaries.
                 </p>
               </div>
@@ -95,7 +95,7 @@ const About: React.FC = () => {
                   AI Price Discovery
                 </h3>
                 <p className="text-gray-600 leading-relaxed">
-                  Smart pricing recommendations based on real-time market data. 
+                  Smart pricing recommendations based on real-time market data.
                   Ensure fair pricing and maximize your business potential.
                 </p>
               </div>
@@ -108,7 +108,7 @@ const About: React.FC = () => {
                   Smart Negotiations
                 </h3>
                 <p className="text-gray-600 leading-relaxed">
-                  AI-powered negotiation assistance for better deals and professional communication. 
+                  AI-powered negotiation assistance for better deals and professional communication.
                   Build stronger customer relationships.
                 </p>
               </div>
@@ -126,7 +126,7 @@ const About: React.FC = () => {
                 Built for Viksit Bharat
               </h2>
               <p className="text-xl text-gray-600 leading-relaxed">
-                This platform was created as part of the 26 Jan Prompt Challenge, with a focus on 
+                This platform was created as part of the 26 Jan Prompt Challenge, with a focus on
                 building technology that serves every Indian trader.
               </p>
             </div>
@@ -140,7 +140,7 @@ const About: React.FC = () => {
               <h3 className="text-2xl lg:text-3xl font-bold text-center text-gray-900 mb-6">
                 Our Approach Prioritizes
               </h3>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="flex items-start space-x-4">
                   <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
@@ -151,7 +151,7 @@ const About: React.FC = () => {
                     <p className="text-gray-600 text-sm">Native support for Indian languages</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start space-x-4">
                   <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
                     <span className="text-white text-sm">✓</span>
@@ -161,7 +161,7 @@ const About: React.FC = () => {
                     <p className="text-gray-600 text-sm">Designed for traditional traders</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start space-x-4">
                   <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
                     <span className="text-white text-sm">✓</span>
@@ -171,7 +171,7 @@ const About: React.FC = () => {
                     <p className="text-gray-600 text-sm">Respect for Indian trading customs</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start space-x-4">
                   <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
                     <span className="text-white text-sm">✓</span>
@@ -181,7 +181,7 @@ const About: React.FC = () => {
                     <p className="text-gray-600 text-sm">Works on basic smartphones</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start space-x-4">
                   <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
                     <span className="text-white text-sm">✓</span>
@@ -191,7 +191,7 @@ const About: React.FC = () => {
                     <p className="text-gray-600 text-sm">Transparent and ethical pricing</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start space-x-4">
                   <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
                     <span className="text-white text-sm">✓</span>
@@ -214,7 +214,7 @@ const About: React.FC = () => {
                 🇮🇳 Jai Hind! Building for a Viksit Bharat
               </h3>
               <p className="text-emerald-100 text-lg leading-relaxed">
-                "Empowering local markets, one conversation at a time" - Where technology 
+                &quot;Empowering local markets, one conversation at a time&quot; - Where technology
                 serves every Indian trader with dignity, respect, and cultural understanding.
               </p>
             </div>

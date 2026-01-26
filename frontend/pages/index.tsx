@@ -5,7 +5,7 @@ import { config } from '../src/config';
 
 const Home: React.FC = () => {
   return (
-    <Layout 
+    <Layout
       title="Multilingual Mandi - Empowering India's Local Markets"
       description="Breaking language barriers, enabling fair pricing, and smart negotiations for vendors across India"
     >
@@ -17,7 +17,7 @@ const Home: React.FC = () => {
             backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
           }}></div>
         </div>
-        
+
         <div className="container mx-auto px-4 py-16 lg:py-24 relative">
           <div className="text-center max-w-4xl mx-auto">
             <div className="flex items-center justify-center space-x-4 mb-8 animate-slide-down">
@@ -33,20 +33,20 @@ const Home: React.FC = () => {
                 </p>
               </div>
             </div>
-            
+
             <h2 className="text-2xl lg:text-4xl font-bold mb-6 animate-slide-up">
-              🇮🇳 Empowering India's Local Markets with AI
+              🇮🇳 Empowering India&apos;s Local Markets with AI
             </h2>
-            
+
             <p className="text-white/90 text-lg lg:text-xl mb-8 leading-relaxed animate-fade-in">
-              Breaking language barriers, enabling fair pricing, and smart negotiations 
+              Breaking language barriers, enabling fair pricing, and smart negotiations
               for vendors across India. Built for the 26 Jan Prompt Challenge - Viksit Bharat.
             </p>
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12 animate-slide-up">
-              <Link 
-                href="/dashboard" 
+              <Link
+                href="/dashboard"
                 className="w-full sm:w-auto px-8 py-4 bg-white text-emerald-700 font-bold rounded-2xl shadow-2xl hover:shadow-3xl hover:bg-emerald-50 transition-all duration-300 transform hover:-translate-y-2 text-center"
               >
                 <span className="flex items-center justify-center space-x-3">
@@ -54,7 +54,7 @@ const Home: React.FC = () => {
                   <span>Open Dashboard</span>
                 </span>
               </Link>
-              
+
               <Link
                 href="/about"
                 className="w-full sm:w-auto px-8 py-4 bg-white/10 backdrop-blur-sm text-white font-bold rounded-2xl border-2 border-white/30 hover:bg-white/20 transition-all duration-300 text-center"
@@ -99,7 +99,7 @@ const Home: React.FC = () => {
                 Real-time Translation
               </h3>
               <p className="text-gray-600 leading-relaxed">
-                Communicate in Hindi, English, and regional languages with instant AI translation. 
+                Communicate in Hindi, English, and regional languages with instant AI translation.
                 Break language barriers and connect with customers across India.
               </p>
             </div>
@@ -112,7 +112,7 @@ const Home: React.FC = () => {
                 AI Price Discovery
               </h3>
               <p className="text-gray-600 leading-relaxed">
-                Get fair market prices and smart recommendations based on real-time data. 
+                Get fair market prices and smart recommendations based on real-time data.
                 Ensure competitive pricing and maximize your profits.
               </p>
             </div>
@@ -125,7 +125,7 @@ const Home: React.FC = () => {
                 Smart Negotiations
               </h3>
               <p className="text-gray-600 leading-relaxed">
-                AI-powered negotiation assistance for better deals and professional communication. 
+                AI-powered negotiation assistance for better deals and professional communication.
                 Close more sales with confidence.
               </p>
             </div>
@@ -175,9 +175,9 @@ const Home: React.FC = () => {
           <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
             Join the digital revolution in local trade. Start using AI-powered tools today.
           </p>
-          
-          <Link 
-            href="/dashboard" 
+
+          <Link
+            href="/dashboard"
             className="inline-flex items-center space-x-3 px-8 py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-bold rounded-2xl shadow-2xl hover:shadow-3xl hover:from-emerald-600 hover:to-emerald-700 transition-all duration-300 transform hover:-translate-y-1"
           >
             <span className="text-2xl">🚀</span>

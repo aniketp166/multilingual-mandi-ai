@@ -146,6 +146,7 @@ export default async function handler(
         success: true
       });
     } catch (parseError) {
+      console.error('Failed to parse negotiation response:', parseError);
       throw new Error('Failed to parse negotiation response');
     }
 
