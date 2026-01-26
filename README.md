@@ -22,11 +22,12 @@ A revolutionary web platform empowering India's local vendors with AI-driven pri
 ## 🛠️ Tech Stack
 
 ### Frontend
-- **React.js 18** - Modern, component-based UI
+- **Next.js 14** - React framework with TypeScript
+- **TypeScript** - Type-safe development
+- **Tailwind CSS** - Utility-first CSS framework
 - **Material-UI (MUI)** - Clean, accessible design system
 - **Socket.IO Client** - Real-time communication
 - **Axios** - API integration
-- **React Router** - Navigation
 
 ### Backend
 - **Python FastAPI** - High-performance API framework
@@ -40,12 +41,17 @@ A revolutionary web platform empowering India's local vendors with AI-driven pri
 
 ```
 multilingual-mandi/
-├── frontend/              # React.js application
+├── frontend/              # Next.js application
+│   ├── pages/            # Next.js pages
 │   ├── src/
-│   │   ├── pages/        # Page components
 │   │   ├── components/   # Reusable components
-│   │   └── App.js        # Main app component
-│   └── package.json
+│   │   ├── styles/       # CSS and styling
+│   │   ├── types/        # TypeScript definitions
+│   │   ├── utils/        # Utility functions
+│   │   └── config/       # Configuration
+│   ├── package.json
+│   ├── next.config.js
+│   └── tsconfig.json
 ├── backend/               # Python FastAPI server
 │   ├── main.py           # FastAPI application
 │   ├── requirements.txt  # Python dependencies
@@ -84,7 +90,7 @@ python main.py
 ```bash
 cd frontend
 npm install
-npm start
+npm run dev
 ```
 
 4. **Access the Application**
