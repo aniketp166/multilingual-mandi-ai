@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ChatSession, Message, Product } from '../types';
 
 interface NegotiationChatProps {
@@ -51,12 +51,12 @@ export default function NegotiationChat({
     console.log('🔵 userRole:', userRole);
     console.log('🔵 chatSession.messages.length:', chatSession.messages.length);
     console.log('🔵 chatSession.messages:', chatSession.messages);
-    
+
     if (userRole === 'vendor' && chatSession.messages.length > 0) {
       const lastMessage = chatSession.messages[chatSession.messages.length - 1];
       console.log('🔵 Last message:', lastMessage);
       console.log('🔵 lastProcessedMessageId.current:', lastProcessedMessageId.current);
-      
+
       // Fetch suggestions if:
       // 1. It's a buyer message
       // 2. We haven't processed this message yet
@@ -100,7 +100,7 @@ export default function NegotiationChat({
       console.log('Negotiation API response status:', response.status);
       const data = await response.json();
       console.log('Negotiation API response data:', data);
-      
+
       if (data.success && data.data) {
         setSuggestions(data.data.suggestions || []);
       } else {
@@ -224,7 +224,7 @@ export default function NegotiationChat({
                             const textToDisplay = displayingOriginal && message.translated_text
                               ? message.text
                               : message.translated_text || message.text;
-                            
+
                             // Ensure we're rendering a string, not an object
                             if (typeof textToDisplay === 'object') {
                               console.error('Message text is an object:', textToDisplay);
@@ -272,10 +272,14 @@ export default function NegotiationChat({
                 {suggestions.map((suggestion, index) => (
                   <button
                     key={index}
-                    onClick={() => handleUseSuggestion(suggestion)}
+                    onClick={() => handleUseSuggestion(typeof suggestion === 'string' ? suggestion : (suggestion as any).response || JSON.stringify(suggestion))}
                     className="w-full text-left text-xs sm:text-sm px-4 py-3 bg-white/80 border border-emerald-100/50 text-emerald-900 rounded-2xl hover:bg-white hover:border-emerald-300 transition-all duration-200 shadow-sm active:scale-[0.98] leading-relaxed relative group"
                   >
-                    <span className="relative z-10">{suggestion}</span>
+                    <span className="relative z-10">
+                      {typeof suggestion === 'string'
+                        ? suggestion
+                        : (suggestion as any).response || (suggestion as any).text || JSON.stringify(suggestion)}
+                    </span>
                     <div className="absolute inset-0 bg-emerald-500/0 group-hover:bg-emerald-500/5 rounded-2xl transition-colors"></div>
                   </button>
                 ))}

@@ -43,6 +43,26 @@ const Dashboard: React.FC = () => {
     loadProducts();
   }, []);
 
+  // Poll for chat updates when a chat is active
+  useEffect(() => {
+    if (!activeChatSession) return;
+
+    const pollInterval = setInterval(() => {
+      const allSessions = storage.getChatSessions();
+      const updatedSession = allSessions.find(s => s.id === activeChatSession.id);
+      
+      if (updatedSession && updatedSession.messages.length !== activeChatSession.messages.length) {
+        console.log('🔄 Chat session updated, refreshing...');
+        setActiveChatSession(updatedSession);
+        
+        // Also update the chat sessions list
+        setChatSessions(allSessions.filter(s => s.status === 'active' && s.messages.length > 0));
+      }
+    }, 2000); // Poll every 2 seconds
+
+    return () => clearInterval(pollInterval);
+  }, [activeChatSession]);
+
   const handleLanguageChange = (newLanguage: string) => {
     setVendorLanguage(newLanguage);
     storage.updateUserPreferences({ language: newLanguage });
@@ -134,8 +154,12 @@ const Dashboard: React.FC = () => {
   const handleOpenChat = (session: ChatSession) => {
     const product = products.find(p => p.id === session.product_id);
     if (product) {
+      // Refresh the session from storage to get latest messages
+      const allSessions = storage.getChatSessions();
+      const latestSession = allSessions.find(s => s.id === session.id);
+      
       setSelectedProduct(product);
-      setActiveChatSession(session);
+      setActiveChatSession(latestSession || session);
     }
   };
 

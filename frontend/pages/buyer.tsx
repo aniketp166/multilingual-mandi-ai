@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Product, ChatSession, Message } from '../src/types';
 import { storage } from '../src/utils/storage';
 import Layout from '../src/components/Layout';
@@ -29,6 +29,23 @@ export default function BuyerPage() {
     loadProducts();
   }, []);
 
+  // Poll for chat updates when a chat is active
+  useEffect(() => {
+    if (!activeChatSession) return;
+
+    const pollInterval = setInterval(() => {
+      const allSessions = storage.getChatSessions();
+      const updatedSession = allSessions.find(s => s.id === activeChatSession.id);
+      
+      if (updatedSession && updatedSession.messages.length !== activeChatSession.messages.length) {
+        console.log('🔄 Chat session updated, refreshing...');
+        setActiveChatSession(updatedSession);
+      }
+    }, 2000); // Poll every 2 seconds
+
+    return () => clearInterval(pollInterval);
+  }, [activeChatSession]);
+
   const loadProducts = () => {
     const allProducts = storage.getProducts();
     setProducts(allProducts);
@@ -37,13 +54,14 @@ export default function BuyerPage() {
   const handleStartChat = (product: Product) => {
     setSelectedProduct(product);
     
-    // Check if there's an existing chat session for this product
+    // Check if there's an existing chat session for this product - always get fresh from storage
     const existingSessions = storage.getChatSessions();
     const existingSession = existingSessions.find(
       session => session.product_id === product.id && session.status === 'active'
     );
 
     if (existingSession) {
+      // Use the fresh session from storage
       setActiveChatSession(existingSession);
     } else {
       // Create new chat session
@@ -62,7 +80,7 @@ export default function BuyerPage() {
     if (!activeChatSession || !selectedProduct) return;
 
     const newMessage: Message = {
-      id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: `msg_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
       sender: 'buyer',
       text: messageText,
       language: buyerLanguage,
@@ -120,6 +138,20 @@ export default function BuyerPage() {
   const handleCloseChat = () => {
     setActiveChatSession(null);
     setSelectedProduct(null);
+  };
+
+  const handleClearChatMessages = () => {
+    if (!activeChatSession) return;
+    
+    const updatedSession = storage.updateChatSession(activeChatSession.id, {
+      messages: []
+    });
+
+    if (updatedSession) {
+      // Close the chat since it has no messages
+      setActiveChatSession(null);
+      setSelectedProduct(null);
+    }
   };
 
   const filteredProducts = products.filter(product =>
@@ -286,6 +318,7 @@ export default function BuyerPage() {
             product={selectedProduct}
             onSendMessage={handleSendMessage}
             onClose={handleCloseChat}
+            onClearMessages={handleClearChatMessages}
             userRole="buyer"
             userLanguage={buyerLanguage}
           />

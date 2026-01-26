@@ -9,7 +9,7 @@ const Home: React.FC = () => {
       description="Breaking language barriers in Indian markets with AI-powered translation, pricing, and negotiation tools"
     >
       {/* Hero Section with Animated Background */}
-      <div className="relative bg-gradient-to-br from-orange-500 via-red-500 to-pink-600 text-white overflow-hidden pt-20 md:pt-16">
+      <div className="relative bg-gradient-to-br from-orange-500 via-red-500 to-pink-600 text-white overflow-hidden pt-16 md:pt-12">
         {/* Animated Background Elements */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute -top-40 -right-40 w-80 h-80 bg-yellow-400 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
@@ -17,10 +17,10 @@ const Home: React.FC = () => {
           <div className="absolute top-40 left-40 w-80 h-80 bg-orange-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-4000"></div>
         </div>
 
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-32 relative z-10">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-16 relative z-10">
           <div className="max-w-6xl mx-auto">
             {/* Badge */}
-            <div className="flex justify-center mb-8">
+            <div className="flex justify-center mb-6">
               <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-6 py-3 rounded-full border border-white/30">
                 <span className="text-2xl">🇮🇳</span>
                 <span className="font-bold text-sm">26 Jan Prompt Challenge • Viksit Bharat</span>
@@ -28,8 +28,8 @@ const Home: React.FC = () => {
             </div>
 
             {/* Main Heading */}
-            <div className="text-center mb-12">
-              <h1 className="text-5xl md:text-7xl lg:text-8xl font-black mb-6 leading-tight">
+            <div className="text-center mb-8">
+              <h1 className="text-5xl md:text-7xl lg:text-8xl font-black mb-4 leading-tight">
                 <span className="block bg-clip-text text-transparent bg-gradient-to-r from-yellow-200 via-white to-green-200">
                   मल्टीलिंगुअल
                 </span>
@@ -37,7 +37,7 @@ const Home: React.FC = () => {
                   MANDI
                 </span>
               </h1>
-              <p className="text-xl md:text-3xl font-bold text-white/90 mb-6">
+              <p className="text-xl md:text-3xl font-bold text-white/90 mb-4">
                 Breaking Language Barriers in Local Trade
               </p>
               <p className="text-lg md:text-xl text-white/80 max-w-3xl mx-auto leading-relaxed px-4">
@@ -47,7 +47,7 @@ const Home: React.FC = () => {
             </div>
 
             {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-10">
               <Link
                 href="/dashboard"
                 className="group relative w-full sm:w-auto px-10 py-5 bg-white text-orange-600 font-bold rounded-2xl shadow-2xl hover:shadow-orange-500/50 transition-all duration-300 transform hover:scale-105 overflow-hidden"
@@ -71,7 +71,7 @@ const Home: React.FC = () => {
             </div>
 
             {/* Language Pills */}
-            <div className="flex flex-wrap justify-center gap-3 mb-8 px-4">
+            <div className="flex flex-wrap justify-center gap-3 mb-6 px-4">
               {['हिंदी', 'English', 'தமிழ்', 'తెలుగు', 'বাংলা', 'मराठी', 'ગુજરાતી', 'ಕನ್ನಡ'].map((lang) => (
                 <div key={lang} className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full border border-white/30 text-sm font-semibold">
                   {lang}

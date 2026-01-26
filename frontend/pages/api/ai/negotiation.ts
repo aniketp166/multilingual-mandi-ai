@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 interface ConversationMessage {
   sender: 'buyer' | 'vendor';
@@ -75,7 +75,8 @@ export default async function handler(
       });
     }
 
-    const genai = new GoogleGenAI({ apiKey });
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const conversationHistory = conversation_history
       .map(msg => `${msg.sender}: ${msg.text}`)
@@ -103,50 +104,52 @@ export default async function handler(
 
     let result;
     try {
-      // Try with gemini-2.0-flash-exp first
-      result = await genai.models.generateContent({
-        model: 'gemini-2.0-flash-exp',
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        config: {
-          temperature: 0.7,
-          maxOutputTokens: 1000,
-        }
-      });
+      result = await model.generateContent(prompt);
     } catch (error) {
-      // Fallback to gemini-1.5-flash
-      result = await genai.models.generateContent({
-        model: 'gemini-1.5-flash',
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        config: {
-          temperature: 0.7,
-          maxOutputTokens: 1000,
-        }
-      });
+      console.error('Gemini error:', error);
+      throw error;
     }
 
-    // Extract text - handle both string and object responses
+    // Extract text safely
     let responseText = '';
-    if (typeof result.text === 'string') {
-      responseText = result.text;
-    } else if (result.text && typeof result.text === 'object') {
-      // Handle case where text is an object (e.g., {response: "...", tone: "..."})
-      responseText = (result.text as any).response || (result.text as any).text || JSON.stringify(result.text);
-    } else {
-      responseText = String(result.text || '');
+    try {
+      if (result && result.response && typeof result.response.text === 'function') {
+        responseText = result.response.text();
+      } else {
+        responseText = JSON.stringify(result);
+      }
+    } catch (textError) {
+      console.error('Error extracting text from result:', textError);
+      responseText = JSON.stringify(result);
     }
     
     // Extract JSON from response (handle markdown code blocks)
     let jsonText = responseText;
-    const jsonMatch = responseText.match(/```json\n([\s\S]*?)\n```/) || responseText.match(/```\n([\s\S]*?)\n```/);
+    const jsonMatch = responseText.match(/```json\n([\s\S]*?)\n```/) || 
+                      responseText.match(/```\n([\s\S]*?)\n```/) ||
+                      responseText.match(/{[\s\S]*}/);
+    
     if (jsonMatch) {
-      jsonText = jsonMatch[1];
+      jsonText = jsonMatch[0]; // If it matched the whole object, use it
+      if (jsonMatch[1]) jsonText = jsonMatch[1]; // If it matched the group, use that
     }
     
     try {
       const parsedResponse = JSON.parse(jsonText);
       
+      // CRITICAL: Ensure suggestions are strings! 
+      // Sometimes LLMs return an array of objects like [{response: "...", tone: "..."}]
+      const rawSuggestions = parsedResponse.suggestions || [];
+      const sanitizedSuggestions = rawSuggestions.map((s: any) => {
+        if (typeof s === 'string') return s;
+        if (typeof s === 'object' && s !== null) {
+          return s.response || s.text || s.suggestion || JSON.stringify(s);
+        }
+        return String(s);
+      });
+
       const negotiationResponse: NegotiationResponse = {
-        suggestions: parsedResponse.suggestions || [
+        suggestions: sanitizedSuggestions.length > 0 ? sanitizedSuggestions : [
           "Thank you for your interest in our products.",
           "Let me see what I can offer you.",
           "I appreciate your business."
@@ -161,6 +164,7 @@ export default async function handler(
       });
     } catch (parseError) {
       console.error('Failed to parse negotiation response:', parseError);
+      console.log('Original response text:', responseText);
       throw new Error('Failed to parse negotiation response');
     }
 
