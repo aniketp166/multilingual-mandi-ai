@@ -1,0 +1,20 @@
+{
+  "name": "Multilingual Mandi",
+  "description": "Real-time linguistic bridge for local trade with AI-driven price discovery and negotiation tools",
+  "version": "1.0.0",
+  "challenge": "26 Jan Prompt Challenge - Viksit Bharat",
+  "tech_stack": {
+    "frontend": "React.js",
+    "backend": "Python FastAPI",
+    "ai_services": "OpenAI GPT, Google Translate",
+    "database": "SQLite/PostgreSQL",
+    "realtime": "WebSockets"
+  },
+  "features": [
+    "Multilingual communication",
+    "AI-driven price discovery",
+    "Real-time negotiations",
+    "Vendor management",
+    "Market analytics"
+  ]
+}
