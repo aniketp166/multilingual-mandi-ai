@@ -8,7 +8,7 @@ const About: React.FC = () => {
       description="Learn about Multilingual Mandi - Breaking language barriers in local trade"
     >
       {/* Hero Section */}
-      <div className="bg-gradient-to-r from-emerald-600 via-emerald-700 to-emerald-800 text-white py-16 lg:py-24">
+      <div className="bg-gradient-to-r from-emerald-600 via-emerald-700 to-emerald-800 text-white pt-20 pb-28 lg:py-24">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
             <div className="flex items-center justify-center space-x-4 mb-8">

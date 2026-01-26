@@ -18,36 +18,36 @@ const Home: React.FC = () => {
           }}></div>
         </div>
 
-        <div className="container mx-auto px-4 py-16 lg:py-24 relative">
+        <div className="container mx-auto px-4 pt-16 pb-32 lg:pt-32 lg:pb-40 relative">
           <div className="text-center max-w-4xl mx-auto">
-            <div className="flex items-center justify-center space-x-4 mb-8 animate-slide-down">
-              <div className="w-16 h-16 lg:w-20 lg:h-20 bg-white/20 backdrop-blur-sm rounded-3xl flex items-center justify-center shadow-2xl">
-                <span className="text-4xl lg:text-5xl">🛒</span>
+            <div className="flex flex-col sm:flex-row items-center justify-center sm:space-x-6 mb-12 animate-slide-down">
+              <div className="w-20 h-20 lg:w-24 lg:h-24 bg-white/20 backdrop-blur-sm rounded-[2rem] flex items-center justify-center shadow-2xl overflow-hidden hover:scale-110 transition-transform mb-6 sm:mb-0">
+                <span className="text-4xl lg:text-6xl drop-shadow-xl">🛒</span>
               </div>
-              <div className="text-left">
-                <h1 className="text-3xl lg:text-5xl font-bold mb-2">
+              <div className="text-center sm:text-left">
+                <h1 className="text-4xl lg:text-6xl font-black mb-2 tracking-tighter leading-none">
                   मल्टीलिंगुअल मंडी
                 </h1>
-                <p className="text-white/80 text-lg lg:text-xl">
-                  Multilingual Mandi
+                <p className="text-white/90 text-sm lg:text-xl font-bold uppercase tracking-[0.3em]">
+                  MULTILINGUAL MANDI
                 </p>
               </div>
             </div>
 
-            <h2 className="text-2xl lg:text-4xl font-bold mb-6 animate-slide-up">
+            <h2 className="text-2xl lg:text-4xl font-extrabold mb-8 animate-slide-up px-4 tracking-tight">
               🇮🇳 Empowering India&apos;s Local Markets with AI
             </h2>
 
-            <p className="text-white/90 text-lg lg:text-xl mb-8 leading-relaxed animate-fade-in">
+            <p className="text-white/95 text-lg lg:text-xl mb-16 leading-relaxed animate-fade-in px-4">
               Breaking language barriers, enabling fair pricing, and smart negotiations
               for vendors across India. Built for the 26 Jan Prompt Challenge - Viksit Bharat.
             </p>
 
             {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12 animate-slide-up">
+            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-20 animate-slide-up px-4">
               <Link
                 href="/dashboard"
-                className="w-full sm:w-auto px-8 py-4 bg-white text-emerald-700 font-bold rounded-2xl shadow-2xl hover:shadow-3xl hover:bg-emerald-50 transition-all duration-300 transform hover:-translate-y-2 text-center"
+                className="w-full sm:w-auto px-12 py-5 bg-white text-emerald-700 font-bold rounded-2xl shadow-2xl hover:shadow-3xl hover:bg-emerald-50 transition-all duration-300 transform hover:-translate-y-2 text-center"
               >
                 <span className="flex items-center justify-center space-x-3">
                   <span className="text-2xl">🚀</span>
@@ -57,7 +57,7 @@ const Home: React.FC = () => {
 
               <Link
                 href="/about"
-                className="w-full sm:w-auto px-8 py-4 bg-white/10 backdrop-blur-sm text-white font-bold rounded-2xl border-2 border-white/30 hover:bg-white/20 transition-all duration-300 text-center"
+                className="w-full sm:w-auto px-12 py-5 bg-white/10 backdrop-blur-sm text-white font-bold rounded-2xl border-2 border-white/30 hover:bg-white/20 transition-all duration-300 text-center"
               >
                 <span className="flex items-center justify-center space-x-3">
                   <span className="text-2xl">ℹ️</span>

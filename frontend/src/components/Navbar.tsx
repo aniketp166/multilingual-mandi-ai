@@ -18,13 +18,13 @@ const Navbar: React.FC = () => {
   return (
     <nav className="bg-white shadow-lg sticky top-0 z-50">
       <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-20 md:h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center">
               <span className="text-white text-xl font-bold">🛒</span>
             </div>
-            <div className="hidden sm:block">
+            <div className="hidden md:block">
               <h1 className="text-xl font-bold text-gray-900">Multilingual Mandi</h1>
               <p className="text-xs text-gray-500">मल्टीलिंगुअल मंडी</p>
             </div>
@@ -36,11 +36,10 @@ const Navbar: React.FC = () => {
               <Link
                 key={item.name}
                 href={item.href}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  isActive(item.href)
-                    ? 'bg-emerald-100 text-emerald-700'
-                    : 'text-gray-600 hover:text-emerald-600 hover:bg-emerald-50'
-                }`}
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive(item.href)
+                  ? 'bg-emerald-100 text-emerald-700'
+                  : 'text-gray-600 hover:text-emerald-600 hover:bg-emerald-50'
+                  }`}
               >
                 {item.name}
               </Link>
@@ -86,11 +85,10 @@ const Navbar: React.FC = () => {
                   key={item.name}
                   href={item.href}
                   onClick={() => setIsMenuOpen(false)}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    isActive(item.href)
-                      ? 'bg-emerald-100 text-emerald-700'
-                      : 'text-gray-600 hover:text-emerald-600 hover:bg-emerald-50'
-                  }`}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive(item.href)
+                    ? 'bg-emerald-100 text-emerald-700'
+                    : 'text-gray-600 hover:text-emerald-600 hover:bg-emerald-50'
+                    }`}
                 >
                   {item.name}
                 </Link>
