@@ -25,7 +25,8 @@ const Dashboard: React.FC = () => {
         const storedProducts = storage.getProducts();
         setProducts(storedProducts);
         const storedChatSessions = storage.getChatSessions();
-        setChatSessions(storedChatSessions.filter(s => s.status === 'active'));
+        // Filter for active sessions that have messages
+        setChatSessions(storedChatSessions.filter(s => s.status === 'active' && s.messages.length > 0));
         
         // Load vendor language preference
         const prefs = storage.getUserPreferences();
@@ -184,13 +185,37 @@ const Dashboard: React.FC = () => {
 
     if (updatedSession) {
       setActiveChatSession(updatedSession);
-      setChatSessions(prev => prev.map(s => s.id === updatedSession.id ? updatedSession : s));
+      // Update or add to chat sessions list
+      setChatSessions(prev => {
+        const existingIndex = prev.findIndex(s => s.id === updatedSession.id);
+        if (existingIndex >= 0) {
+          return prev.map(s => s.id === updatedSession.id ? updatedSession : s);
+        } else {
+          return [...prev, updatedSession];
+        }
+      });
     }
   };
 
   const handleCloseChat = () => {
     setActiveChatSession(null);
     setSelectedProduct(null);
+  };
+
+  const handleClearChatMessages = () => {
+    if (!activeChatSession) return;
+    
+    const updatedSession = storage.updateChatSession(activeChatSession.id, {
+      messages: []
+    });
+
+    if (updatedSession) {
+      // Remove from active chats list since it has no messages
+      setChatSessions(prev => prev.filter(s => s.id !== updatedSession.id));
+      // Close the chat
+      setActiveChatSession(null);
+      setSelectedProduct(null);
+    }
   };
 
   const storageInfo = storage.getStorageInfo();
@@ -535,6 +560,7 @@ const Dashboard: React.FC = () => {
             product={selectedProduct}
             onSendMessage={handleSendMessage}
             onClose={handleCloseChat}
+            onClearMessages={handleClearChatMessages}
             userRole="vendor"
             userLanguage={vendorLanguage}
           />
