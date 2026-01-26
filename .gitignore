@@ -1,3 +1,11 @@
+# Environment Files - NEVER COMMIT
+.env
+*.env
+!.env.example
+backend/.env
+frontend/.env
+**/.env
+
 # Python Virtual Environments - ALL LOCATIONS
 venv/
 env/
