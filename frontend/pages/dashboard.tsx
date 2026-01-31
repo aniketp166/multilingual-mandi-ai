@@ -1,15 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, Plus, Play, Package, IndianRupee, Scale, MessageSquare, Globe, AlertTriangle, Trash2, Edit3, Sparkles, ChevronDown } from 'lucide-react';
+import { LayoutDashboard, Plus, Play, Package, IndianRupee, Scale, MessageSquare, Globe, AlertTriangle, Sparkles } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import Layout from '../src/components/Layout';
 import ProductCard from '../src/components/ProductCard';
-import AddProductModal from '../src/components/AddProductModal';
-import PriceSuggestionModal from '../src/components/PriceSuggestionModal';
-import NegotiationChat from '../src/components/NegotiationChat';
+
+const AddProductModal = dynamic(() => import('../src/components/AddProductModal'), { ssr: false });
+const PriceSuggestionModal = dynamic(() => import('../src/components/PriceSuggestionModal'), { ssr: false });
+const NegotiationChat = dynamic(() => import('../src/components/NegotiationChat'), { ssr: false });
 import { storage } from '../src/utils/storage';
 import { Product, ProductInput, ChatSession, Message } from '../src/types';
 import { config } from '../src/config';
 
+import { useTranslation } from 'react-i18next';
+
 const Dashboard: React.FC = () => {
+  const { i18n } = useTranslation();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -115,6 +120,7 @@ const Dashboard: React.FC = () => {
   const handleLanguageChange = (newLanguage: string) => {
     setVendorLanguage(newLanguage);
     storage.updateUserPreferences({ language: newLanguage });
+    i18n.changeLanguage(newLanguage);
   };
 
   const handleAddProduct = async (productInput: ProductInput) => {

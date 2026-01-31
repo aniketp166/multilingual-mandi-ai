@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { Menu, X, ShoppingCart, ChevronDown, Store, ShoppingBag, User } from 'lucide-react';
+import { Menu, X, ShoppingCart, ChevronDown, Store, ShoppingBag, User, Globe } from 'lucide-react';
+
+import { useTranslation } from 'react-i18next';
 
 const Navbar: React.FC = () => {
+  const { t, i18n } = useTranslation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const router = useRouter();
@@ -22,8 +25,8 @@ const Navbar: React.FC = () => {
   const isBuyerPath = router.pathname.includes('buyer');
 
   const navigation = [
-    { name: 'Home', href: '/' },
-    { name: 'About', href: '/about' },
+    { name: 'home', href: '/' },
+    { name: 'about', href: '/about' },
   ];
 
   return (
@@ -40,9 +43,9 @@ const Navbar: React.FC = () => {
             </div>
             <div className="hidden sm:block">
               <h1 className="text-xl font-black text-text-primary tracking-tight leading-none">
-                Multilingual <span className="text-primary">Mandi</span>
+                {t('navbar.multilingual')} <span className="text-primary">{t('navbar.brand')}</span>
               </h1>
-              <p className="text-[10px] font-black text-text-tertiary uppercase tracking-[0.2em] mt-1">मल्टीलिंगुअल मंडी</p>
+              <p className="text-[10px] font-black text-text-tertiary uppercase tracking-[0.2em] mt-1">{t('navbar.subtitle')}</p>
             </div>
           </Link>
 
@@ -57,7 +60,7 @@ const Navbar: React.FC = () => {
                   : 'text-text-primary hover:text-primary'
                   }`}
               >
-                <span className="relative z-10 uppercase tracking-widest">{item.name}</span>
+                <span className="relative z-10 uppercase tracking-widest">{t(`navbar.${item.name}`)}</span>
                 {isActive(item.href) && (
                   <span className="absolute bottom-0 left-4 right-4 h-0.5 bg-primary animate-scale-in"></span>
                 )}
@@ -65,6 +68,31 @@ const Navbar: React.FC = () => {
             ))}
 
             <div className="h-6 w-px bg-border-light mx-2"></div>
+
+            {/* Language Switcher - Navbar */}
+            <div className="relative group/lang mr-2">
+              <button className="flex items-center justify-center w-9 h-9 rounded-xl hover:bg-background-secondary text-text-secondary hover:text-primary transition-all">
+                <Globe className="w-5 h-5" />
+              </button>
+
+              <div className="absolute top-full right-0 mt-2 w-32 opacity-0 translate-y-2 pointer-events-none group-hover/lang:opacity-100 group-hover/lang:translate-y-0 group-hover/lang:pointer-events-auto transition-all duration-300 z-50">
+                <div className="bg-surface rounded-xl shadow-xl border border-border-light p-1 overflow-hidden">
+                  {[
+                    { code: 'en', label: 'English' },
+                    { code: 'hi', label: 'हिंदी' },
+                    { code: 'mr', label: 'मराठी' }
+                  ].map((lang) => (
+                    <button
+                      key={lang.code}
+                      onClick={() => i18n.changeLanguage(lang.code)}
+                      className={`w-full text-left px-3 py-2 text-xs font-bold rounded-lg transition-colors ${i18n.language === lang.code ? 'bg-primary/10 text-primary' : 'hover:bg-background-secondary text-text-primary'}`}
+                    >
+                      {lang.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
 
             {/* Market Mode Switcher */}
             <div className="relative group/mode">
@@ -81,22 +109,22 @@ const Navbar: React.FC = () => {
                 ) : (
                   <User className="w-4 h-4" />
                 )}
-                <span>{isVendorPath ? 'Vendor Mode' : isBuyerPath ? 'Buyer Mode' : 'Market Access'}</span>
+                <span>{isVendorPath ? t('navbar.vendorMode') : isBuyerPath ? t('navbar.buyerMode') : t('navbar.marketAccess')}</span>
                 <ChevronDown className="w-3 h-3 translate-y-px opacity-50 group-hover/mode:rotate-180 transition-transform" />
               </button>
 
               {/* Dropdown Menu */}
               <div className="absolute top-full right-0 mt-2 w-56 opacity-0 translate-y-2 pointer-events-none group-hover/mode:opacity-100 group-hover/mode:translate-y-0 group-hover/mode:pointer-events-auto transition-all duration-300 z-50">
                 <div className="bg-surface rounded-2xl shadow-2xl border border-border-light p-2 shadow-primary/10">
-                  <p className="px-4 py-2 text-[8px] font-black text-text-tertiary uppercase tracking-widest border-b border-border-light mb-1">Select Your Role</p>
+                  <p className="px-4 py-2 text-[8px] font-black text-text-tertiary uppercase tracking-widest border-b border-border-light mb-1">{t('navbar.selectRole')}</p>
 
                   <Link href="/buyer" className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${isBuyerPath ? 'bg-secondary/10 text-secondary-dark' : 'hover:bg-primary-50 text-text-secondary hover:text-primary'}`}>
                     <div className={`p-2 rounded-lg ${isBuyerPath ? 'bg-secondary/20' : 'bg-background-secondary'}`}>
                       <ShoppingBag className="w-4 h-4" />
                     </div>
                     <div className="flex-1">
-                      <p className="font-black text-[10px] uppercase tracking-wider">Buyer Mode</p>
-                      <p className="text-[8px] font-medium opacity-70">Browse & Negotiate</p>
+                      <p className="font-black text-[10px] uppercase tracking-wider">{t('navbar.buyerMode')}</p>
+                      <p className="text-[8px] font-medium opacity-70">{t('navbar.browseNegotiate')}</p>
                     </div>
                   </Link>
 
@@ -105,8 +133,8 @@ const Navbar: React.FC = () => {
                       <Store className="w-4 h-4" />
                     </div>
                     <div className="flex-1">
-                      <p className="font-black text-[10px] uppercase tracking-wider">Vendor Mode</p>
-                      <p className="text-[8px] font-medium opacity-70">Manage Inventory</p>
+                      <p className="font-black text-[10px] uppercase tracking-wider">{t('navbar.vendorMode')}</p>
+                      <p className="text-[8px] font-medium opacity-70">{t('navbar.manageInventory')}</p>
                     </div>
                   </Link>
                 </div>
@@ -141,12 +169,12 @@ const Navbar: React.FC = () => {
                     : 'text-text-primary hover:text-primary hover:bg-primary-50'
                     }`}
                 >
-                  {item.name.toUpperCase()}
+                  {t(`navbar.${item.name}`).toUpperCase()}
                 </Link>
               ))}
 
               <div className="h-px bg-border-light my-2"></div>
-              <p className="px-6 text-[9px] font-black text-text-tertiary uppercase tracking-widest mb-2">Market Access</p>
+              <p className="px-6 text-[9px] font-black text-text-tertiary uppercase tracking-widest mb-2">{t('navbar.marketAccess')}</p>
 
               <Link
                 href="/buyer"
@@ -154,7 +182,7 @@ const Navbar: React.FC = () => {
                 className={`flex items-center gap-4 px-6 py-4 rounded-2xl text-sm font-black transition-all active:scale-95 ${isBuyerPath ? 'bg-secondary text-text-inverse' : 'bg-background-secondary text-text-primary'}`}
               >
                 <ShoppingBag className="w-5 h-5" />
-                <span>BUYER MODE</span>
+                <span>{t('navbar.buyerMode').toUpperCase()}</span>
               </Link>
 
               <Link
@@ -163,7 +191,7 @@ const Navbar: React.FC = () => {
                 className={`flex items-center gap-4 px-6 py-4 rounded-2xl text-sm font-black transition-all active:scale-95 ${isVendorPath ? 'bg-primary text-text-inverse' : 'bg-background-secondary text-text-primary'}`}
               >
                 <Store className="w-5 h-5" />
-                <span>VENDOR MODE</span>
+                <span>{t('navbar.vendorMode').toUpperCase()}</span>
               </Link>
             </div>
           </div>

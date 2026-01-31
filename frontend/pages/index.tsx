@@ -3,7 +3,10 @@ import Link from 'next/link';
 import { Store, ShoppingBag, Globe, Zap, MessageSquare, Handshake, TrendingUp, Sparkles, CheckCircle, ShieldCheck } from 'lucide-react';
 import Layout from '../src/components/Layout';
 
+import { useTranslation } from 'react-i18next';
+
 const Home: React.FC = () => {
+  const { t } = useTranslation();
   return (
     <Layout
       title="Multilingual Mandi - AI-Powered Local Trade Platform"
@@ -24,25 +27,25 @@ const Home: React.FC = () => {
             <div className="mb-6 animate-fade-in">
               <div className="inline-flex items-center gap-2 bg-text-inverse/10 backdrop-blur-xl px-4 py-2 rounded-xl border border-text-inverse/20 shadow-xl group hover:bg-text-inverse/20 transition-all duration-500">
                 <Sparkles className="w-4 h-4 text-secondary-light animate-pulse" />
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-text-inverse/90">In Viksit Bharat • 26 Jan Challenge</span>
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-text-inverse/90">{t('home.badge')}</span>
               </div>
             </div>
 
             {/* Main Heading */}
             <div className="text-center mb-8 space-y-3 font-display">
               <h1 className="text-3xl md:text-5xl lg:text-7xl font-black leading-tight tracking-tighter animate-slide-up">
-                <span className="block text-primary-100">मल्टीलिंगुअल</span>
+                <span className="block text-primary-100">{t('navbar.multilingual')}</span>
                 <span className="block bg-clip-text text-transparent bg-gradient-to-r from-secondary-light via-text-inverse to-primary-light">
-                  MANDI
+                  {t('home.title')}
                 </span>
               </h1>
               <p className="text-base md:text-xl text-text-inverse/80 font-black uppercase tracking-[0.15em] animate-fade-in animation-delay-1000">
-                Breaking Language Barriers in Local Trade
+                {t('home.subtitle')}
               </p>
             </div>
 
             <p className="text-sm md:text-base text-text-inverse/70 text-center max-w-2xl mb-10 leading-relaxed font-medium animate-fade-in animation-delay-2000">
-              Empowering India&apos;s vendors and buyers with AI-powered multilingual chat, smart pricing, and real-time negotiations across 8+ Indian languages.
+              {t('home.desc')}
             </p>
 
             {/* CTA Buttons */}
@@ -52,14 +55,14 @@ const Home: React.FC = () => {
                 className="flex-1 group bg-surface text-primary-dark px-6 py-4 rounded-xl font-black flex items-center justify-center gap-3 shadow-xl hover:shadow-primary/20 transition-all duration-300 hover:-translate-y-1 active:scale-95 text-xs uppercase tracking-widest"
               >
                 <Store className="w-4 h-4" />
-                <span>Start Selling</span>
+                <span>{t('home.startSelling')}</span>
               </Link>
               <Link
                 href="/buyer"
                 className="flex-1 group bg-text-inverse/5 backdrop-blur-md border-2 border-text-inverse/20 text-text-inverse px-6 py-4 rounded-xl font-black flex items-center justify-center gap-3 hover:bg-text-inverse/10 transition-all duration-300 hover:-translate-y-1 active:scale-95 text-xs uppercase tracking-widest"
               >
                 <ShoppingBag className="w-4 h-4" />
-                <span>Browse Mandi</span>
+                <span>{t('home.browseMandi')}</span>
               </Link>
             </div>
 
@@ -91,19 +94,19 @@ const Home: React.FC = () => {
         <div className="container mx-auto px-6 lg:px-8">
           <div className="text-center mb-20 space-y-4 font-display">
             <h2 className="text-4xl md:text-6xl font-black text-text-primary tracking-tight">
-              AI-First <span className="text-primary">Ecosystem</span>
+              {t('home.aiEcosystem')}
             </h2>
             <p className="text-xl text-text-secondary max-w-2xl mx-auto font-medium">
-              Revolutionizing traditional trade with cutting-edge intelligence
+              {t('home.aiDesc')}
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
-              { title: 'Real-Time Translation', desc: 'Automatic bridge between consumer & vendor dialects.', icon: Globe, color: 'text-primary', bg: 'bg-primary-50', border: 'border-primary-100' },
-              { title: 'Smart Pricing', desc: 'Real-time market data to ensure fair trade for all.', icon: TrendingUp, color: 'text-secondary', bg: 'bg-secondary-50', border: 'border-secondary-100' },
-              { title: 'AI Negotiation', desc: 'Context-aware suggestions for closing every deal.', icon: Handshake, color: 'text-info', bg: 'bg-info-light/10', border: 'border-info-light/20' },
-              { title: 'Vernacular Chat', desc: 'Built for 8+ major Indian languages natively.', icon: MessageSquare, color: 'text-primary', bg: 'bg-primary-50', border: 'border-primary-100' }
+              { title: t('home.realTimeTranslation'), desc: t('home.realTimeTranslationDesc'), icon: Globe, color: 'text-primary', bg: 'bg-primary-50', border: 'border-primary-100' },
+              { title: t('home.smartPricing'), desc: t('home.smartPricingDesc'), icon: TrendingUp, color: 'text-secondary', bg: 'bg-secondary-50', border: 'border-secondary-100' },
+              { title: t('home.aiNegotiation'), desc: t('home.aiNegotiationDesc'), icon: Handshake, color: 'text-info', bg: 'bg-info-light/10', border: 'border-info-light/20' },
+              { title: t('home.vernacularChat'), desc: t('home.vernacularChatDesc'), icon: MessageSquare, color: 'text-primary', bg: 'bg-primary-50', border: 'border-primary-100' }
             ].map((f, i) => (
               <div
                 key={i}
@@ -131,14 +134,14 @@ const Home: React.FC = () => {
             <div className="space-y-8">
               <div className="font-display">
                 <h2 className="text-4xl md:text-6xl font-black text-text-primary leading-tight">
-                  Why Transact at <span className="text-primary">Multilingual Mandi?</span>
+                  {t('home.whyTransact')} <span className="text-primary">Multilingual Mandi</span>
                 </h2>
               </div>
               <div className="space-y-6">
                 {[
-                  { title: 'Zero Commission Trade', desc: 'Direct peer-to-peer connection without any hidden fees.', icon: Zap },
-                  { title: 'Verified Local Quality', desc: 'Source directly from verified farmers and distributors.', icon: ShieldCheck },
-                  { title: 'AI-Led Efficiency', desc: 'Save hours of negotiation with smart reply systems.', icon: Sparkles }
+                  { title: t('home.zeroCommission'), desc: t('home.zeroCommissionDesc'), icon: Zap },
+                  { title: t('home.verifiedLocal'), desc: t('home.verifiedLocalDesc'), icon: ShieldCheck },
+                  { title: t('home.aiEfficiency'), desc: t('home.aiEfficiencyDesc'), icon: Sparkles }
                 ].map((item, i) => (
                   <div key={i} className="flex gap-6 items-start group">
                     <div className="w-12 h-12 bg-surface rounded-xl flex items-center justify-center shadow-lg border border-border-light group-hover:bg-primary-50 transition-colors">
@@ -159,8 +162,8 @@ const Home: React.FC = () => {
                   <div className="w-24 h-24 bg-primary-50 rounded-full flex items-center justify-center animate-bounce-gentle">
                     <CheckCircle className="w-12 h-12 text-primary" />
                   </div>
-                  <h3 className="text-3xl font-black text-primary font-display">Viksit Mandi</h3>
-                  <p className="text-center font-bold text-text-secondary">Pioneering digital equality for India's local traders.</p>
+                  <h3 className="text-3xl font-black text-primary font-display">{t('home.viksitMandi')}</h3>
+                  <p className="text-center font-bold text-text-secondary">{t('home.viksitMandiDesc')}</p>
                 </div>
               </div>
               <div className="absolute -bottom-8 -right-8 w-40 h-40 bg-secondary/10 rounded-full blur-3xl"></div>
@@ -175,15 +178,15 @@ const Home: React.FC = () => {
           <div className="max-w-4xl mx-auto text-center space-y-8">
             <div className="inline-flex items-center gap-2 bg-secondary-50 px-5 py-2.5 rounded-2xl group border border-secondary-100">
               <Sparkles className="w-5 h-5 text-secondary group-hover:rotate-12 transition-transform" />
-              <span className="font-black text-secondary-dark text-xs uppercase tracking-widest">Digital Mandi Revolution</span>
+              <span className="font-black text-secondary-dark text-xs uppercase tracking-widest">{t('home.badge')}</span>
             </div>
 
             <h2 className="text-3xl md:text-5xl font-black text-text-primary tracking-tighter leading-none font-display">
-              Ready to <span className="text-primary">Evolve</span> Your Business?
+              {t('home.readyToEvolve')}
             </h2>
 
             <p className="text-base md:text-lg text-text-secondary max-w-2xl mx-auto leading-relaxed font-semibold">
-              Join thousands of local traders breaking language barriers with India&apos;s first AI-powered marketplace.
+              {t('home.joinOthers')}
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto">
@@ -191,18 +194,18 @@ const Home: React.FC = () => {
                 href="/dashboard"
                 className="flex-1 px-8 py-4 bg-secondary text-text-inverse font-black rounded-xl shadow-lg shadow-secondary/10 hover:shadow-secondary/20 transition-all duration-500 transform hover:-translate-y-1 text-base uppercase tracking-tight"
               >
-                Launch Vendor App
+                {t('home.launchApp')}
               </Link>
               <Link
                 href="/buyer"
                 className="flex-1 px-8 py-4 bg-primary text-text-inverse font-black rounded-xl shadow-lg shadow-primary/10 hover:shadow-primary/20 transition-all duration-500 transform hover:-translate-y-1 text-base uppercase tracking-tight"
               >
-                Browse Marketplace
+                {t('home.browseMarketplace')}
               </Link>
             </div>
 
             <div className="pt-6 flex flex-col items-center gap-2">
-              <p className="text-text-tertiary font-bold uppercase tracking-widest text-[9px]">JOIN +10,000 VENDORS ACROSS INDIA</p>
+              <p className="text-text-tertiary font-bold uppercase tracking-widest text-[9px]">{t('home.joinVendors')}</p>
             </div>
           </div>
         </div>

@@ -42,16 +42,7 @@ export default function NegotiationChat({
     };
   }, []);
 
-  useEffect(() => {
-    if (userRole === 'vendor' && chatSession.messages.length > 0) {
-      const lastMessage = chatSession.messages[chatSession.messages.length - 1];
 
-      if (lastMessage.sender === 'buyer' && lastMessage.id !== lastProcessedMessageId.current) {
-        lastProcessedMessageId.current = lastMessage.id;
-        fetchNegotiationSuggestions(lastMessage.text);
-      }
-    }
-  }, [chatSession.messages, userRole]);
 
   const fetchNegotiationSuggestions = async (buyerMessage: string) => {
     setLoadingSuggestions(true);
@@ -75,10 +66,10 @@ export default function NegotiationChat({
 
       if (data.success && data.data) {
         const rawSuggestions = data.data.suggestions || [];
-        const sanitized = rawSuggestions.map((s: any) => {
+        const sanitized = rawSuggestions.map((s: unknown) => {
           if (typeof s === 'string') return s;
           if (s && typeof s === 'object') {
-            const obj = s as Record<string, any>;
+            const obj = s as Record<string, unknown>;
             return String(obj.response || obj.text || obj.suggestion || JSON.stringify(s));
           }
           return String(s || '');
@@ -97,6 +88,18 @@ export default function NegotiationChat({
       setLoadingSuggestions(false);
     }
   };
+
+  useEffect(() => {
+    if (userRole === 'vendor' && chatSession.messages.length > 0) {
+      const lastMessage = chatSession.messages[chatSession.messages.length - 1];
+
+      if (lastMessage.sender === 'buyer' && lastMessage.id !== lastProcessedMessageId.current) {
+        lastProcessedMessageId.current = lastMessage.id;
+        fetchNegotiationSuggestions(lastMessage.text);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chatSession.messages, userRole]);
 
   const handleSendMessage = () => {
     if (messageText.trim()) {

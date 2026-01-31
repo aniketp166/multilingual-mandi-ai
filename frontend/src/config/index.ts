@@ -40,19 +40,19 @@ interface AppConfig {
 }
 
 // Helper function to get environment variable with fallback
-const getEnvVar = (key: string, fallback: string = ''): string => {
+const getEnvVar = (key: string, fallback = ''): string => {
   return process.env[key] || fallback;
 };
 
 // Helper function to get boolean environment variable
-const getEnvBool = (key: string, fallback: boolean = false): boolean => {
+const getEnvBool = (key: string, fallback = false): boolean => {
   const value = process.env[key];
   if (value === undefined) return fallback;
   return value.toLowerCase() === 'true';
 };
 
 // Helper function to get number environment variable
-const getEnvNumber = (key: string, fallback: number = 0): number => {
+const getEnvNumber = (key: string, fallback = 0): number => {
   const value = process.env[key];
   if (value === undefined) return fallback;
   const parsed = parseFloat(value);

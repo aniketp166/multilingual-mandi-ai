@@ -136,7 +136,7 @@ Format:
     } else if (typeof result?.text === 'string') {
       responseText = result.text;
     } else if (result?.text && typeof result.text === 'object') {
-      responseText = (result.text as any).response || (result.text as any).text || JSON.stringify(result.text);
+      responseText = ((result.text as Record<string, unknown>).response as string) || ((result.text as Record<string, unknown>).text as string) || JSON.stringify(result.text);
     } else {
       responseText = String(result?.text || '');
     }
@@ -162,7 +162,7 @@ Format:
         max_price: parsedResponse.max_price || 60,
         recommended_price: parsedResponse.recommended_price || 40,
         reasoning: (parsedResponse.reasoning || 'AI-generated pricing based on market analysis').trim().replace(/^[n]\s+/, ""),
-        market_trend: (parsedResponse.market_trend || 'stable').trim() as any,
+        market_trend: (parsedResponse.market_trend || 'stable').trim() as 'rising' | 'falling' | 'stable',
         confidence: 0.85
       };
 

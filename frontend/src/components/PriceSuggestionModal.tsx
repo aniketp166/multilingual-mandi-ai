@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { TrendingUp, TrendingDown, BarChart3, Target, Edit3, AlertTriangle, X, IndianRupee, Sparkles, ShieldCheck } from 'lucide-react';
+import { TrendingUp, TrendingDown, BarChart3, Target, AlertTriangle, X, IndianRupee, Sparkles, ShieldCheck } from 'lucide-react';
 import { Product, PriceSuggestionResponse } from '../types';
 import { geminiAI } from '../services/gemini';
 

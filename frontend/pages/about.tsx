@@ -1,6 +1,6 @@
 import React from 'react';
 import Layout from '../src/components/Layout';
-import { Target, Eye, Globe, Sparkles, MessageSquare, IndianRupee, Handshake, ShieldCheck, Heart, Award, Users } from 'lucide-react';
+import { Target, Eye, Globe, Sparkles, IndianRupee, Handshake, ShieldCheck, Heart, Award, Users } from 'lucide-react';
 
 const About: React.FC = () => {
   return (
@@ -23,7 +23,7 @@ const About: React.FC = () => {
             </div>
 
             <h1 className="text-3xl md:text-5xl font-black tracking-tighter leading-[0.9] font-display uppercase animate-slide-up">
-              Empowering India's <span className="text-primary-200">Local Trade</span>
+              Empowering India&apos;s <span className="text-primary-200">Local Trade</span>
             </h1>
 
             <p className="text-xl lg:text-3xl text-primary-50 font-medium leading-tight max-w-3xl mx-auto animate-slide-up animation-delay-300">
@@ -47,7 +47,7 @@ const About: React.FC = () => {
                 </div>
                 <h2 className="text-2xl lg:text-3xl font-black text-text-primary mb-4 font-display uppercase tracking-tight">Our Mission</h2>
                 <p className="text-text-secondary text-base lg:text-lg font-medium leading-relaxed">
-                  To democratize technology for India's local markets, making advanced AI
+                  To democratize technology for India&apos;s local markets, making advanced AI
                   accessible to traditional traders and fostering inclusive economic growth
                   across all communities.
                 </p>
@@ -173,7 +173,7 @@ const About: React.FC = () => {
                       Jai Hind! <span className="text-saffron">जय हिंद!</span>
                     </h3>
                     <p className="text-lg text-text-inverse/60 italic font-medium leading-relaxed max-w-2xl mx-auto">
-                      "Empowering local markets, one conversation at a time" — Where cutting-edge AI meets the pulse of traditional Indian trade.
+                      &quot;Empowering local markets, one conversation at a time&quot; — Where cutting-edge AI meets the pulse of traditional Indian trade.
                     </p>
                   </div>
                 </div>
