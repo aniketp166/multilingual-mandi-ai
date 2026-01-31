@@ -8,10 +8,10 @@ interface LayoutProps {
   description?: string;
 }
 
-const Layout: React.FC<LayoutProps> = ({ 
-  children, 
-  title = 'Multilingual Mandi', 
-  description = 'AI-powered multilingual marketplace for local vendors' 
+const Layout: React.FC<LayoutProps> = ({
+  children,
+  title = 'Multilingual Mandi',
+  description = 'AI-powered multilingual marketplace for local vendors'
 }) => {
   return (
     <>
@@ -21,7 +21,7 @@ const Layout: React.FC<LayoutProps> = ({
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-background font-sans selection:bg-primary-100 selection:text-primary-dark">
         <Navbar />
         <main className="pt-0">{children}</main>
       </div>
