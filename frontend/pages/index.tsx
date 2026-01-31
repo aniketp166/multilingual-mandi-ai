@@ -10,7 +10,7 @@ const Home: React.FC = () => {
       description="Breaking language barriers in Indian markets with AI-powered translation, pricing, and negotiation tools"
     >
       {/* Hero Section */}
-      <div className="relative bg-primary-dark text-text-inverse overflow-hidden pt-4 md:pt-6 font-sans selection:bg-secondary-100 selection:text-secondary-dark">
+      <div className="relative bg-primary-dark text-text-inverse overflow-hidden pt-10 md:pt-14 pb-20 md:pb-24 font-sans selection:bg-secondary-100 selection:text-secondary-dark">
         {/* Animated Background Elements using Variables */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute -top-40 -right-40 w-[30rem] h-[30rem] bg-secondary-light/20 rounded-full mix-blend-screen filter blur-[100px] animate-blob"></div>
@@ -18,73 +18,68 @@ const Home: React.FC = () => {
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[40rem] h-[40rem] bg-primary-light/10 rounded-full mix-blend-screen filter blur-[120px] animate-blob animation-delay-4000"></div>
         </div>
 
-        <div className="container mx-auto px-6 lg:px-8 py-2 md:py-4 relative z-10">
+        <div className="container mx-auto px-6 lg:px-8 py-4 md:py-8 relative z-10">
           <div className="max-w-4xl mx-auto flex flex-col items-center">
             {/* Badge */}
             <div className="mb-6 animate-fade-in">
               <div className="inline-flex items-center gap-2 bg-text-inverse/10 backdrop-blur-xl px-4 py-2 rounded-xl border border-text-inverse/20 shadow-xl group hover:bg-text-inverse/20 transition-all duration-500">
-                <span className="text-lg group-hover:scale-110 transition-transform">🇮🇳</span>
-                <span className="font-black text-[9px] uppercase tracking-[0.2em] text-text-inverse/90">Viksit Bharat • 26 Jan Challenge</span>
+                <Sparkles className="w-4 h-4 text-secondary-light animate-pulse" />
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-text-inverse/90">In Viksit Bharat • 26 Jan Challenge</span>
               </div>
             </div>
 
             {/* Main Heading */}
             <div className="text-center mb-8 space-y-3 font-display">
-              <h1 className="text-4xl md:text-5xl lg:text-7xl font-black leading-tight tracking-tighter animate-slide-up">
+              <h1 className="text-3xl md:text-5xl lg:text-7xl font-black leading-tight tracking-tighter animate-slide-up">
                 <span className="block text-primary-100">मल्टीलिंगुअल</span>
                 <span className="block bg-clip-text text-transparent bg-gradient-to-r from-secondary-light via-text-inverse to-primary-light">
                   MANDI
                 </span>
               </h1>
-              <div className="space-y-2 max-w-2xl mx-auto">
-                <p className="text-lg md:text-xl font-black text-text-inverse tracking-tight">
-                  Breaking Language Barriers in Local Trade
-                </p>
-                <p className="text-sm md:text-base text-text-inverse/80 leading-relaxed font-medium">
-                  Empowering India&apos;s vendors and buyers with AI-powered multilingual chat,
-                  smart pricing, and real-time negotiations across 8+ Indian languages.
-                </p>
-              </div>
+              <p className="text-base md:text-xl text-text-inverse/80 font-black uppercase tracking-[0.15em] animate-fade-in animation-delay-1000">
+                Breaking Language Barriers in Local Trade
+              </p>
             </div>
 
+            <p className="text-sm md:text-base text-text-inverse/70 text-center max-w-2xl mb-10 leading-relaxed font-medium animate-fade-in animation-delay-2000">
+              Empowering India&apos;s vendors and buyers with AI-powered multilingual chat, smart pricing, and real-time negotiations across 8+ Indian languages.
+            </p>
+
             {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-10 w-full max-w-lg animate-fade-in">
+            <div className="flex flex-col sm:flex-row gap-4 mb-10 w-full max-w-md animate-fade-in animation-delay-3000 relative z-20">
               <Link
                 href="/dashboard"
-                className="group relative flex-1 w-full flex items-center justify-center gap-3 px-8 py-4 bg-text-inverse text-secondary-dark font-black rounded-2xl shadow-xl hover:shadow-secondary/20 transition-all duration-500 hover:-translate-y-1 overflow-hidden"
+                className="flex-1 group bg-surface text-primary-dark px-6 py-4 rounded-xl font-black flex items-center justify-center gap-3 shadow-xl hover:shadow-primary/20 transition-all duration-300 hover:-translate-y-1 active:scale-95 text-xs uppercase tracking-widest"
               >
-                <div className="absolute inset-0 bg-secondary-50 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <Store className="w-6 h-6 relative z-10 group-hover:rotate-6 transition-transform" />
-                <span className="relative z-10 text-base tracking-tight uppercase">Start Selling</span>
+                <Store className="w-4 h-4" />
+                <span>Start Selling</span>
               </Link>
-
               <Link
                 href="/buyer"
-                className="group relative flex-1 w-full flex items-center justify-center gap-3 px-8 py-4 bg-primary text-text-inverse font-black rounded-2xl shadow-xl hover:shadow-primary/20 transition-all duration-500 hover:-translate-y-1 overflow-hidden border border-text-inverse/10"
+                className="flex-1 group bg-text-inverse/5 backdrop-blur-md border-2 border-text-inverse/20 text-text-inverse px-6 py-4 rounded-xl font-black flex items-center justify-center gap-3 hover:bg-text-inverse/10 transition-all duration-300 hover:-translate-y-1 active:scale-95 text-xs uppercase tracking-widest"
               >
-                <div className="absolute inset-0 bg-primary-dark opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <ShoppingBag className="w-6 h-6 relative z-10 group-hover:bounce-gentle transition-transform" />
-                <span className="relative z-10 text-base tracking-tight uppercase">Browse Mandi</span>
+                <ShoppingBag className="w-4 h-4" />
+                <span>Browse Mandi</span>
               </Link>
             </div>
 
             {/* Language Pills */}
-            <div className="flex flex-wrap justify-center gap-2 mb-8 max-w-2xl">
+            <div className="flex flex-wrap justify-center gap-2 mb-16 max-w-2xl relative z-20">
               {['हिंदी', 'English', 'தமிழ்', 'తెలుగు', 'বাংলা', 'मराठी', 'ગુજરાતી', 'ಕನ್ನಡ'].map((lang, i) => (
                 <div
                   key={lang}
                   className="px-4 py-1.5 bg-text-inverse/10 backdrop-blur-md rounded-lg border border-text-inverse/20 text-[10px] font-black tracking-widest hover:bg-text-inverse/20 transition-all cursor-default text-text-inverse/90 animate-fade-in"
-                  style={{ animationDelay: `${i * 100}ms` }}
+                  style={{ animationDelay: `${3500 + (i * 100)}ms` }}
                 >
-                  {lang.toUpperCase()}
+                  {lang}
                 </div>
               ))}
             </div>
           </div>
         </div>
 
-        {/* Wave Divider using Variable Color */}
-        <div className="absolute bottom-0 left-0 right-0">
+        {/* Wave Divider Moved Inside and Z-indexed down */}
+        <div className="absolute bottom-0 left-0 right-0 z-0 pointer-events-none">
           <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-auto">
             <path d="M0 120L60 110C120 100 240 80 360 70C480 60 600 60 720 65C840 70 960 80 1080 85C1200 90 1320 90 1380 90L1440 90V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z" className="fill-surface" />
           </svg>
@@ -130,7 +125,7 @@ const Home: React.FC = () => {
       </div>
 
       {/* Trust & Efficiency Section */}
-      <div className="py-24 bg-background-secondary border-y border-border-light relative overflow-hidden">
+      <div className="bg-primary text-text-inverse pt-12 pb-16 lg:pt-16 lg:pb-20 relative overflow-hidden">
         <div className="container mx-auto px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div className="space-y-8">
@@ -159,7 +154,7 @@ const Home: React.FC = () => {
             </div>
             <div className="relative">
               <div className="aspect-square bg-gradient-to-br from-primary-light/20 to-secondary-light/20 rounded-[3rem] border-2 border-primary/20 p-8 flex items-center justify-center relative overflow-hidden group">
-                <div className="absolute inset-0 bg-white/40 backdrop-blur-sm group-hover:backdrop-blur-none transition-all duration-700"></div>
+                <div className="absolute inset-0 bg-surface/40 backdrop-blur-sm group-hover:backdrop-blur-none transition-all duration-700"></div>
                 <div className="w-full h-full bg-surface rounded-3xl shadow-3xl border border-border-light flex flex-col items-center justify-center p-12 space-y-6 relative z-10">
                   <div className="w-24 h-24 bg-primary-50 rounded-full flex items-center justify-center animate-bounce-gentle">
                     <CheckCircle className="w-12 h-12 text-primary" />

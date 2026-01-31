@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, Plus, Play, Package, IndianRupee, Scale, MessageSquare, Globe, AlertTriangle, Trash2, Edit3, Sparkles } from 'lucide-react';
+import { LayoutDashboard, Plus, Play, Package, IndianRupee, Scale, MessageSquare, Globe, AlertTriangle, Trash2, Edit3, Sparkles, ChevronDown } from 'lucide-react';
 import Layout from '../src/components/Layout';
 import ProductCard from '../src/components/ProductCard';
 import AddProductModal from '../src/components/AddProductModal';
@@ -341,59 +341,54 @@ const Dashboard: React.FC = () => {
           <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-primary/20 to-transparent pointer-events-none"></div>
           <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-saffron/10 rounded-full blur-3xl"></div>
 
-          <div className="max-w-7xl mx-auto px-6 py-6 relative">
-            <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
-              <div className="flex-1 space-y-6 animate-fade-in">
-                <div className="space-y-3">
-                  <div className="inline-flex items-center gap-2 bg-text-inverse/10 backdrop-blur-md px-3 py-1.5 rounded-xl border border-text-inverse/10 shadow-lg">
+          <div className="max-w-7xl mx-auto px-6 py-14 relative">
+            <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-6">
+              <div className="flex-1 space-y-4 animate-fade-in">
+                <div className="space-y-2">
+                  <div className="inline-flex items-center gap-2 bg-text-inverse/10 backdrop-blur-md px-3 py-1 rounded-xl border border-text-inverse/10 shadow-lg">
                     <LayoutDashboard className="w-3.5 h-3.5 text-primary-200" />
                     <span className="text-[9px] font-black uppercase tracking-[0.2em] text-primary-100">Vendor Command Center</span>
                   </div>
-                  <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-none">
+                  <h1 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tight leading-none">
                     Market <span className="text-primary-200">Overview</span>
                   </h1>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-6">
-                  <div className="relative group">
-                    <div className="absolute inset-0 bg-text-inverse/5 rounded-2xl blur-xl group-hover:bg-text-inverse/10 transition-colors"></div>
-                    <div className="relative flex items-center gap-4 bg-text-inverse/10 backdrop-blur-xl rounded-2xl p-2 pl-5 border border-text-inverse/20 shadow-2xl">
-                      <div className="flex items-center gap-3">
-                        <Globe className="w-5 h-5 text-primary-200" />
-                        <span className="text-xs font-black uppercase tracking-widest text-text-inverse/70">Language</span>
-                      </div>
-                      <select
-                        value={vendorLanguage}
-                        onChange={(e) => handleLanguageChange(e.target.value)}
-                        className="appearance-none bg-text-inverse text-primary-dark px-6 py-2.5 rounded-xl font-bold text-sm focus:outline-none focus:ring-4 focus:ring-primary/20 cursor-pointer shadow-lg outline-none"
-                      >
-                        <option value="en">English</option>
-                        <option value="hi">हिंदी (Hindi)</option>
-                        <option value="ta">தமிழ் (Tamil)</option>
-                        <option value="te">తెలుగు (Telugu)</option>
-                        <option value="bn">বাংলা (Bengali)</option>
-                        <option value="mr">मराठी (Marathi)</option>
-                        <option value="gu">ગુજરાતી (Gujarati)</option>
-                        <option value="kn">ಕನ್ನಡ (Kannada)</option>
-                      </select>
-                    </div>
+                <div className="flex flex-wrap items-center gap-4">
+                  <div className="flex items-center gap-3 bg-text-inverse/10 backdrop-blur-md px-4 py-2.5 rounded-xl border border-text-inverse/20 shadow-lg">
+                    <Globe className="w-4 h-4 text-primary-200" />
+                    <span className="text-[10px] font-black uppercase tracking-widest text-text-inverse/80">Market Language</span>
+                    <select
+                      value={vendorLanguage}
+                      onChange={(e) => handleLanguageChange(e.target.value)}
+                      className="bg-transparent text-text-inverse font-black text-xs focus:outline-none cursor-pointer outline-none"
+                    >
+                      <option value="en" className="bg-surface text-text-primary">English</option>
+                      <option value="hi" className="bg-surface text-text-primary">हिंदी (Hindi)</option>
+                      <option value="ta" className="bg-surface text-text-primary">தமிழ் (Tamil)</option>
+                      <option value="te" className="bg-surface text-text-primary">తెలుగు (Telugu)</option>
+                      <option value="bn" className="bg-surface text-text-primary">বাংলা (Bengali)</option>
+                      <option value="mr" className="bg-surface text-text-primary">मराठी (Marathi)</option>
+                      <option value="gu" className="bg-surface text-text-primary">ગુજરાતી (Gujarati)</option>
+                      <option value="kn" className="bg-surface text-text-primary">ಕನ್ನಡ (Kannada)</option>
+                    </select>
                   </div>
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-4 lg:pb-2 animate-slide-up">
+              <div className="flex flex-col sm:flex-row gap-3 animate-slide-up">
                 <button
                   onClick={() => setIsAddModalOpen(true)}
-                  className="group flex-1 sm:flex-none flex items-center justify-center gap-3 px-8 py-5 bg-text-inverse text-primary-dark font-black rounded-2xl shadow-xl hover:shadow-primary-dark/30 transition-all duration-300 hover:-translate-y-1 active:scale-95 text-lg"
+                  className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-4 bg-text-inverse text-primary-dark font-black rounded-xl shadow-lg hover:shadow-primary-dark/20 transition-all duration-300 hover:-translate-y-0.5 active:scale-95 text-xs uppercase tracking-widest"
                 >
-                  <Plus className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" />
+                  <Plus className="w-4 h-4" />
                   <span>ADD LISTING</span>
                 </button>
                 <button
                   onClick={addSampleProduct}
-                  className="flex-1 sm:flex-none flex items-center justify-center gap-3 px-8 py-5 bg-primary/40 backdrop-blur-xl text-text-inverse font-black rounded-2xl border border-text-inverse/10 hover:bg-primary/60 transition-all duration-300 active:scale-95"
+                  className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-4 bg-primary/40 backdrop-blur-xl text-text-inverse font-black rounded-xl border border-text-inverse/10 hover:bg-primary/60 transition-all duration-300 active:scale-95 text-xs uppercase tracking-widest"
                 >
-                  <Play className="w-5 h-5 fill-current" />
+                  <Play className="w-4 h-4 fill-current" />
                   <span>DEMO DATA</span>
                 </button>
               </div>
@@ -403,7 +398,7 @@ const Dashboard: React.FC = () => {
 
         {/* Improved Stats Cards */}
         {products.length > 0 && (
-          <div className="max-w-7xl mx-auto px-6 -mt-10 relative z-20">
+          <div className="max-w-7xl mx-auto px-6 -mt-4 relative z-20">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {[
                 { label: 'Inventory', value: products.length, sub: 'Active Items', icon: Package, color: 'text-primary', bg: 'bg-primary-50' },
@@ -414,7 +409,7 @@ const Dashboard: React.FC = () => {
                 <div
                   key={i}
                   onClick={stat.action}
-                  className={`group bg-surface rounded-[1.5rem] p-6 shadow-lg border border-surface-secondary hover:border-primary-200 transition-all duration-500 hover:-translate-y-1 ${stat.action ? 'cursor-pointer hover:shadow-primary-100/30' : 'cursor-default'}`}
+                  className={`group bg-surface rounded-[1.5rem] p-6 shadow-lg border border-border-light hover:border-primary-200 transition-all duration-500 hover:-translate-y-1 ${stat.action ? 'cursor-pointer hover:shadow-primary-100/30' : 'cursor-default'}`}
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className={`p-3 ${stat.bg} rounded-xl group-hover:scale-105 transition-transform duration-500`}>

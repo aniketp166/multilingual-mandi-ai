@@ -15,6 +15,8 @@ module.exports = {
           DEFAULT: 'var(--color-primary)',
           light: 'var(--color-primary-light)',
           dark: 'var(--color-primary-dark)',
+          10: 'var(--color-primary-10)',
+          20: 'var(--color-primary-20)',
         },
         secondary: {
           50: 'var(--color-secondary-50)',
@@ -43,6 +45,8 @@ module.exports = {
           secondary: 'var(--color-text-secondary)',
           tertiary: 'var(--color-text-tertiary)',
           inverse: 'var(--color-text-inverse)',
+          'inverse-10': 'var(--color-text-inverse-10)',
+          'inverse-20': 'var(--color-text-inverse-20)',
         },
         border: {
           DEFAULT: 'var(--color-border)',

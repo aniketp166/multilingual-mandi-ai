@@ -22,7 +22,7 @@ const About: React.FC = () => {
               <span className="text-[9px] font-black uppercase tracking-[0.15em]">Our Story & Mission</span>
             </div>
 
-            <h1 className="text-3xl lg:text-5xl font-black tracking-tighter leading-[0.9] font-display uppercase animate-slide-up">
+            <h1 className="text-3xl md:text-5xl font-black tracking-tighter leading-[0.9] font-display uppercase animate-slide-up">
               Empowering India's <span className="text-primary-200">Local Trade</span>
             </h1>
 
@@ -111,7 +111,7 @@ const About: React.FC = () => {
                 }
               ].map((feature, i) => (
                 <div key={i} className="text-center group space-y-6">
-                  <div className={`w-24 h-24 ${feature.bg} rounded-[2rem] flex items-center justify-center mx-auto shadow-xl group-hover:shadow-2xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 border border-white`}>
+                  <div className={`w-24 h-24 ${feature.bg} rounded-[2rem] flex items-center justify-center mx-auto shadow-xl group-hover:shadow-2xl transition-all duration-500 group-hover:scale-110 group-hover:rotate-3 border border-text-inverse`}>
                     <feature.icon className={`w-10 h-10 ${feature.color}`} />
                   </div>
                   <div className="space-y-3">
@@ -138,7 +138,7 @@ const About: React.FC = () => {
 
               <div className="relative z-10 space-y-16">
                 <div className="flex flex-col items-center text-center space-y-6">
-                  <div className="w-24 h-24 bg-white/10 rounded-[2rem] flex items-center justify-center backdrop-blur-md border border-white/20 shadow-2xl group-hover:rotate-12 transition-transform">
+                  <div className="w-24 h-24 bg-text-inverse/10 rounded-[2rem] flex items-center justify-center backdrop-blur-md border border-text-inverse/20 shadow-2xl group-hover:rotate-12 transition-transform">
                     <span className="text-5xl">🇮🇳</span>
                   </div>
                   <h2 className="text-4xl lg:text-6xl font-black font-display uppercase tracking-tighter leading-none">
@@ -159,7 +159,7 @@ const About: React.FC = () => {
                     { label: 'Economic Inclusion', icon: Users },
                   ].map((it, i) => (
                     <div key={i} className="flex items-center gap-5 group/item">
-                      <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center shrink-0 border border-white/10 group-hover/item:bg-primary/20 transition-colors">
+                      <div className="w-12 h-12 bg-text-inverse/10 rounded-2xl flex items-center justify-center shrink-0 border border-text-inverse/10 group-hover/item:bg-primary/20 transition-colors">
                         <it.icon className="w-5 h-5 text-primary-200" />
                       </div>
                       <span className="text-lg font-black uppercase tracking-widest text-text-inverse/90">{it.label}</span>
@@ -167,7 +167,7 @@ const About: React.FC = () => {
                   ))}
                 </div>
 
-                <div className="pt-10 border-t border-white/10 text-center space-y-8">
+                <div className="pt-10 border-t border-text-inverse/10 text-center space-y-8">
                   <div className="space-y-4">
                     <h3 className="text-2xl lg:text-3xl font-black font-display uppercase tracking-tight">
                       Jai Hind! <span className="text-saffron">जय हिंद!</span>
@@ -182,7 +182,7 @@ const About: React.FC = () => {
           </div>
         </div>
       </div>
-    </Layout>
+    </Layout >
   );
 };
 

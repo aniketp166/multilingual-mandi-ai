@@ -124,7 +124,7 @@ export default function NegotiationChat({
 
   return (
     <div className="fixed inset-0 bg-text-primary/40 backdrop-blur-sm flex items-center justify-center z-[200] p-4 animate-fade-in font-sans">
-      <div className="bg-surface rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col animate-scale-in border border-border-light">
+      <div className="bg-surface rounded-[2rem] shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-scale-in border border-border-light">
         {/* Chat Header */}
         <div className="bg-primary text-text-inverse p-5 flex justify-between items-center shadow-lg relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-24 h-24 bg-text-inverse/5 rounded-full -mr-12 -mt-12 transition-transform group-hover:scale-150"></div>
@@ -197,7 +197,7 @@ export default function NegotiationChat({
                       <div
                         className={`px-5 py-4 shadow-md transition-all duration-300 ${isCurrentUser
                           ? 'bg-primary text-text-inverse rounded-3xl rounded-br-none shadow-primary/20'
-                          : 'bg-surface text-text-primary border border-border-light rounded-3xl rounded-bl-none shadow-gray-200/50'
+                          : 'bg-surface text-text-primary border border-border-light rounded-3xl rounded-bl-none shadow-md'
                           }`}
                       >
                         <p className="text-sm sm:text-base leading-relaxed break-words font-medium">
@@ -239,7 +239,7 @@ export default function NegotiationChat({
 
         {/* AI Suggestions Section */}
         {userRole === 'vendor' && (loadingSuggestions || suggestions.length > 0) && (
-          <div className="border-t border-border-light p-5 bg-surface shadow-[0_-4px_20px_0_rgba(0,0,0,0.02)] max-h-48 overflow-y-auto flex-shrink-0">
+          <div className="border-t border-border-light p-5 bg-surface max-h-48 overflow-y-auto flex-shrink-0">
             <div className="flex items-center gap-3 mb-4 px-1">
               <div className="p-2 bg-secondary-50 border border-secondary-100 rounded-lg">
                 <Sparkles className="w-5 h-5 text-secondary animate-pulse" />

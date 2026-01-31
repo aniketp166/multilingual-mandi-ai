@@ -90,7 +90,7 @@ const PriceSuggestionModal: React.FC<PriceSuggestionModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-text-primary/40 backdrop-blur-sm flex items-center justify-center z-[200] p-4 animate-fade-in font-sans">
-      <div className="bg-surface rounded-3xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-hidden flex flex-col animate-scale-in border border-border-light">
+      <div className="bg-surface rounded-[2rem] shadow-2xl max-w-lg w-full max-h-[90vh] overflow-hidden flex flex-col animate-scale-in border border-border-light">
         {/* Header */}
         <div className="bg-primary text-text-inverse p-6 flex-shrink-0 relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-24 h-24 bg-text-inverse/5 rounded-full -mr-12 -mt-12 transition-transform group-hover:scale-150"></div>
