@@ -76,8 +76,10 @@ export default function BuyerPage() {
       // Create new chat session
       const newSession = storage.addChatSession({
         product_id: product.id,
-        vendor_id: 'vendor_1', // In a real app, this would be dynamic
-        buyer_id: 'buyer_1', // In a real app, this would be the logged-in buyer
+        vendor_id: 'vendor_1',
+        buyer_id: 'buyer_1',
+        buyer_language: buyerLanguage,
+        vendor_language: product.language,
         messages: [],
         status: 'active'
       });
@@ -107,7 +109,7 @@ export default function BuyerPage() {
           body: JSON.stringify({
             text: messageText,
             source_language: buyerLanguage,
-            target_language: selectedProduct.language
+            target_language: activeChatSession.vendor_language || selectedProduct.language
           })
         });
 

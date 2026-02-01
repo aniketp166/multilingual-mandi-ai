@@ -32,6 +32,8 @@ export interface ChatSession {
   product_id: string;
   vendor_id: string;
   buyer_id: string;
+  buyer_language?: string;
+  vendor_language?: string;
   messages: Message[];
   status: "active" | "closed" | "archived";
   created_at: string;

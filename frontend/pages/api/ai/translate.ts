@@ -96,7 +96,8 @@ export default async function handler(
     } else if (typeof result?.text === 'string') {
       translatedText = result.text;
     } else if (result?.text && typeof result.text === 'object') {
-      translatedText = (result.text as any).response || (result.text as any).text || JSON.stringify(result.text);
+      const textObj = result.text as Record<string, unknown>;
+      translatedText = String(textObj.response || textObj.text || JSON.stringify(result.text));
     } else {
       translatedText = String(result?.text || '');
     }

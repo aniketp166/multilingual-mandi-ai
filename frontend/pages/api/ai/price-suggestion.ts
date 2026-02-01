@@ -86,30 +86,41 @@ export default async function handler(
       });
     }
 
+    const languageNames: Record<string, string> = {
+      'en': 'English',
+      'hi': 'Hindi',
+      'ta': 'Tamil',
+      'te': 'Telugu',
+      'bn': 'Bengali',
+      'mr': 'Marathi',
+      'gu': 'Gujarati',
+      'kn': 'Kannada'
+    };
+
     const client = new GoogleGenAI({ apiKey });
 
     const responseLanguage = language || 'en';
+    const responseLanguageName = languageNames[responseLanguage] || 'English';
 
-    const prompt = `As a market analyst for Indian agricultural products, provide pricing recommendations using current market data:
+    const prompt = `As a market analyst for Indian agricultural products, provide pricing recommendations using current market data.
 
 Product: ${product_name}
 Quantity: ${quantity} kg
 Current Price: ₹${current_price || 'Not specified'}
 Location: ${location || 'India'}
 
-Search for current market prices and trends for this product. Use real-time data to provide accurate recommendations.
-
 Requirements:
-1. reasoning must be max 2 VERY SHORT sentences in ${responseLanguage}.
-2. market_trend must be rising|falling|stable.
-3. Use current market data from search results.
+1. reasoning MUST be in ${responseLanguageName}. Do NOT use English if the language is not English.
+2. reasoning must be max 2 VERY SHORT sentences.
+3. market_trend must be rising|falling|stable.
+4. Use current market data from search results.
 
 Format:
 {
   "min_price": number,
   "max_price": number,
   "recommended_price": number,
-  "reasoning": "string",
+  "reasoning": "string in ${responseLanguageName}",
   "market_trend": "string"
 }`;
 
@@ -121,7 +132,6 @@ Format:
         config: {
           temperature: 0.4,
           maxOutputTokens: 2048,
-          responseMimeType: 'application/json',
           tools: [{ googleSearch: {} }]
         }
       });
@@ -136,7 +146,8 @@ Format:
     } else if (typeof result?.text === 'string') {
       responseText = result.text;
     } else if (result?.text && typeof result.text === 'object') {
-      responseText = (result.text as any).response || (result.text as any).text || JSON.stringify(result.text);
+      const textObj = result.text as Record<string, unknown>;
+      responseText = String(textObj.response || textObj.text || JSON.stringify(result.text));
     } else {
       responseText = String(result?.text || '');
     }
@@ -162,7 +173,7 @@ Format:
         max_price: parsedResponse.max_price || 60,
         recommended_price: parsedResponse.recommended_price || 40,
         reasoning: (parsedResponse.reasoning || 'AI-generated pricing based on market analysis').trim().replace(/^[n]\s+/, ""),
-        market_trend: (parsedResponse.market_trend || 'stable').trim() as any,
+        market_trend: (parsedResponse.market_trend || 'stable').trim() as PriceSuggestionResponse['market_trend'],
         confidence: 0.85
       };
 

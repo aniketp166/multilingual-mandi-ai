@@ -75,7 +75,7 @@ export class FrontendPrompts {
   /**
    * Validate user input before sending to AI
    */
-  static validateInput(text: string, maxLength: number = 1000): { isValid: boolean; error?: string } {
+  static validateInput(text: string, maxLength = 1000): { isValid: boolean; error?: string } {
     if (!text || !text.trim()) {
       return { isValid: false, error: "Input cannot be empty" };
     }
@@ -123,7 +123,7 @@ export class FrontendPrompts {
   /**
    * Format error messages for user display
    */
-  static formatErrorMessage(error: string, context: string = ""): string {
+  static formatErrorMessage(error: string, context = ""): string {
     const errorMap: { [key: string]: string } = {
       "RATE_LIMIT_EXCEEDED": "Too many requests. Please wait a moment and try again.",
       "VALIDATION_ERROR": "Please check your input and try again.",

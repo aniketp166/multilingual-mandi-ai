@@ -271,7 +271,9 @@ const Dashboard: React.FC = () => {
       .filter(m => m.sender === 'buyer')
       .pop();
 
-    if (lastBuyerMessage && lastBuyerMessage.language !== vendorLanguage) {
+    const targetLanguage = lastBuyerMessage?.language || activeChatSession.buyer_language;
+
+    if (targetLanguage && targetLanguage !== vendorLanguage) {
       try {
         const response = await fetch('/api/ai/translate', {
           method: 'POST',
@@ -279,7 +281,7 @@ const Dashboard: React.FC = () => {
           body: JSON.stringify({
             text: messageText,
             source_language: vendorLanguage,
-            target_language: lastBuyerMessage.language
+            target_language: targetLanguage
           })
         });
 

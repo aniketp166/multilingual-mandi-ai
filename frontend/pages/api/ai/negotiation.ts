@@ -81,7 +81,19 @@ export default async function handler(
       });
     }
 
+    const languageNames: Record<string, string> = {
+      'en': 'English',
+      'hi': 'Hindi',
+      'ta': 'Tamil',
+      'te': 'Telugu',
+      'bn': 'Bengali',
+      'mr': 'Marathi',
+      'gu': 'Gujarati',
+      'kn': 'Kannada'
+    };
+
     const client = new GoogleGenAI({ apiKey });
+    const languageName = languageNames[vendor_language] || 'English';
 
     const conversationHistory = conversation_history
       .map(msg => `${msg.sender}: ${msg.text}`)
@@ -94,10 +106,10 @@ Conversation:
 ${conversationHistory}
 Buyer: "${buyer_message}"
 
-Generate 3 VERY SHORT (max 1 sentence each) professional responses in ${vendor_language}.
+Generate 3 VERY SHORT (max 1 sentence each) professional responses in ${languageName}.
 Return as JSON:
 {
-  "suggestions": ["short_res1", "short_res2", "short_res3"],
+  "suggestions": ["short message in ${languageName}", "another short message in ${languageName}", "one more in ${languageName}"],
   "tone": "friendly"
 }`;
 
@@ -123,7 +135,8 @@ Return as JSON:
     } else if (typeof result?.text === 'string') {
       responseText = result.text;
     } else if (result?.text && typeof result.text === 'object') {
-      responseText = (result.text as any).response || (result.text as any).text || JSON.stringify(result.text);
+      const textObj = result.text as Record<string, unknown>;
+      responseText = String(textObj.response || textObj.text || JSON.stringify(result.text));
     } else {
       responseText = String(result?.text || '');
     }
