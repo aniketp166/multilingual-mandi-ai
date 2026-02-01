@@ -1,30 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { GoogleGenAI } from '@google/genai';
-
-interface ConversationMessage {
-  sender: 'buyer' | 'vendor';
-  text: string;
-  timestamp: string;
-}
-
-interface Product {
-  name: string;
-  price: number;
-  quantity: number;
-}
-
-interface NegotiationRequest {
-  product: Product;
-  buyer_message: string;
-  vendor_language: string;
-  conversation_history: ConversationMessage[];
-}
-
-interface NegotiationResponse {
-  suggestions: string[];
-  context: string;
-  tone: 'friendly' | 'professional' | 'firm';
-}
+import { parseGeminiResponse } from '../../../src/utils/ai-helpers';
+import { NegotiationRequest, NegotiationResponse } from '../../../src/types';
 
 interface ApiResponse {
   data?: NegotiationResponse;
@@ -117,55 +94,14 @@ Return as JSON:
       throw error;
     }
 
-    let responseText = '';
-    if (result?.candidates?.[0]?.content?.parts?.[0]?.text) {
-      responseText = result.candidates[0].content.parts[0].text;
-    } else if (typeof result?.text === 'string') {
-      responseText = result.text;
-    } else if (result?.text && typeof result.text === 'object') {
-      responseText = ((result.text as Record<string, unknown>).response as string) || ((result.text as Record<string, unknown>).text as string) || JSON.stringify(result.text);
-    } else {
-      responseText = String(result?.text || '');
-    }
-    
-    let jsonText = responseText.trim();
-    
-    // Improved JSON extraction regex
-    const jsonMatch = responseText.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
-    if (jsonMatch && jsonMatch[1]) {
-      jsonText = jsonMatch[1].trim();
-    } else {
-      const objectMatch = responseText.match(/\{[\s\S]*\}/);
-      if (objectMatch) {
-        jsonText = objectMatch[0];
-      }
-    }
-    
+    // Use centralized parser
     try {
-      // Clean potential control characters that break JSON.parse
-      const cleanJsonText = jsonText.replace(/[\u0000-\u001F\u007F-\u009F]/g, " ");
-      const parsedResponse = JSON.parse(cleanJsonText);
+      const parsedResponse = parseGeminiResponse<NegotiationResponse>(result);
       
-      const rawSuggestions = parsedResponse.suggestions || [];
-      const sanitizedSuggestions = Array.isArray(rawSuggestions) 
-        ? rawSuggestions.map((s: unknown) => {
-            if (typeof s === 'string') return s;
-            if (typeof s === 'object' && s !== null) {
-              const obj = s as Record<string, unknown>;
-              return String(obj.response || obj.text || obj.suggestion || JSON.stringify(s));
-            }
-            return String(s);
-          }).filter((s: string) => s && s.length > 0)
-        : [];
-
       const negotiationResponse: NegotiationResponse = {
-        suggestions: sanitizedSuggestions.length > 0 ? sanitizedSuggestions : [
-          "Thank you for your interest in our products.",
-          "Let me see what I can offer you.",
-          "I appreciate your business."
-        ],
-        context: "AI-generated negotiation assistance",
-        tone: (parsedResponse.tone || 'friendly').trim()
+        suggestions: parsedResponse.suggestions || [],
+        context: parsedResponse.context || "AI-generated negotiation assistance",
+        tone: (parsedResponse.tone || 'friendly') as "friendly" | "professional" | "firm"
       };
 
       return res.status(200).json({
@@ -174,7 +110,7 @@ Return as JSON:
       });
     } catch (parseError) {
       console.error('Failed to parse negotiation response:', parseError);
-      console.error('Response text was:', responseText);
+
       throw new Error('Failed to parse negotiation response');
     }
 

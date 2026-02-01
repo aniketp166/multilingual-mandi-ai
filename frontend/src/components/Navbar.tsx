@@ -42,10 +42,10 @@ const Navbar: React.FC = () => {
               <ShoppingCart className="text-text-inverse w-6 h-6 group-hover:rotate-12 transition-transform" />
             </div>
             <div className="hidden sm:block">
-              <h1 className="text-xl font-black text-text-primary tracking-tight leading-none">
+              <h1 className="text-xl font-black text-text-primary tracking-tight leading-none" suppressHydrationWarning>
                 {t('navbar.multilingual')} <span className="text-primary">{t('navbar.brand')}</span>
               </h1>
-              <p className="text-[10px] font-black text-text-tertiary uppercase tracking-[0.2em] mt-1">{t('navbar.subtitle')}</p>
+              <p className="text-[10px] font-black text-text-tertiary uppercase tracking-[0.2em] mt-1" suppressHydrationWarning>{t('navbar.subtitle')}</p>
             </div>
           </Link>
 
@@ -60,7 +60,7 @@ const Navbar: React.FC = () => {
                   : 'text-text-primary hover:text-primary'
                   }`}
               >
-                <span className="relative z-10 uppercase tracking-widest">{t(`navbar.${item.name}`)}</span>
+                <span className="relative z-10 uppercase tracking-widest" suppressHydrationWarning>{t(`navbar.${item.name}`)}</span>
                 {isActive(item.href) && (
                   <span className="absolute bottom-0 left-4 right-4 h-0.5 bg-primary animate-scale-in"></span>
                 )}

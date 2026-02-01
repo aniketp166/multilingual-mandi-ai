@@ -1,19 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { GoogleGenAI } from '@google/genai';
-
-interface TranslationRequest {
-  text: string;
-  source_language: string;
-  target_language: string;
-}
-
-interface TranslationResponse {
-  translated_text: string;
-  original_text: string;
-  source_language: string;
-  target_language: string;
-  confidence: number;
-}
+import { parseGeminiResponse } from '../../../src/utils/ai-helpers';
+import { TranslationRequest, TranslationResponse } from '../../../src/types';
 
 interface ApiResponse {
   data?: TranslationResponse;
@@ -83,6 +71,7 @@ export default async function handler(
         config: {
           temperature: 0.3,
           maxOutputTokens: 2048,
+          responseMimeType: 'application/json',
         }
       });
     } catch (error) {
@@ -90,16 +79,10 @@ export default async function handler(
       throw error;
     }
 
-    let translatedText = '';
-    if (result?.candidates?.[0]?.content?.parts?.[0]?.text) {
-      translatedText = result.candidates[0].content.parts[0].text;
-    } else if (typeof result?.text === 'string') {
-      translatedText = result.text;
-    } else if (result?.text && typeof result.text === 'object') {
-      translatedText = ((result.text as Record<string, unknown>).response as string) || ((result.text as Record<string, unknown>).text as string) || JSON.stringify(result.text);
-    } else {
-      translatedText = String(result?.text || '');
-    }
+    // Use centralized parser
+    const parsedResponse = parseGeminiResponse<{ response?: string; text?: string; translated_text?: string }>(result);
+    // Handle different potential response formats from the AI model
+    const translatedText = parsedResponse.translated_text || parsedResponse.response || parsedResponse.text || '';
 
     const translationResponse: TranslationResponse = {
       translated_text: translatedText.trim(),

@@ -58,46 +58,26 @@ const Dashboard: React.FC = () => {
 
     loadData();
 
+    // Listen for changes from other tabs
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'multilingual-mandi-data') {
         loadData();
       }
     };
 
+    // Listen for changes from the same tab (dispatched by storage utility)
+    const handleLocalStorageChange = () => {
+      loadData();
+    };
+
     window.addEventListener('storage', handleStorageChange);
-
-    const globalPoll = setInterval(() => {
-      const storedProducts = storage.getProducts();
-      const allSessions = storage.getChatSessions();
-
-      const activeSessions = allSessions
-        .filter(s => s.status === 'active' && s.messages.length > 0 && storedProducts.some(p => p.id === s.product_id))
-        .sort((a, b) => {
-          const timeA = new Date(a.messages[a.messages.length - 1]?.timestamp || 0).getTime();
-          const timeB = new Date(b.messages[b.messages.length - 1]?.timestamp || 0).getTime();
-          return timeB - timeA;
-        });
-
-      setChatSessions(prev => {
-        if (JSON.stringify(prev) !== JSON.stringify(activeSessions)) {
-          return activeSessions;
-        }
-        return prev;
-      });
-
-      if (activeChatSession) {
-        const updatedSession = allSessions.find(s => s.id === activeChatSession.id);
-        if (updatedSession && updatedSession.messages.length !== activeChatSession.messages.length) {
-          setActiveChatSession(updatedSession);
-        }
-      }
-    }, 2000);
+    window.addEventListener('local-storage', handleLocalStorageChange);
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
-      clearInterval(globalPoll);
+      window.removeEventListener('local-storage', handleLocalStorageChange);
     };
-  }, [activeChatSession]);
+  }, []); // Only run on mount
 
   useEffect(() => {
     const pollInterval = setInterval(() => {
