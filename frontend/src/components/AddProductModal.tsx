@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Package, Edit3, X, ChevronDown, Zap, IndianRupee, Globe } from 'lucide-react';
 import { Product, ProductInput, SAMPLE_PRODUCTS, SUPPORTED_LANGUAGES } from '../types';
 
 interface AddProductModalProps {
@@ -6,15 +7,15 @@ interface AddProductModalProps {
   onClose: () => void;
   onSubmit: (product: ProductInput) => void;
   defaultLanguage?: string;
-  editProduct?: Product | null; // Add support for editing
+  editProduct?: Product | null;
 }
 
-const AddProductModal: React.FC<AddProductModalProps> = ({ 
-  isOpen, 
-  onClose, 
-  onSubmit, 
+const AddProductModal: React.FC<AddProductModalProps> = ({
+  isOpen,
+  onClose,
+  onSubmit,
   defaultLanguage = 'en',
-  editProduct = null 
+  editProduct = null
 }) => {
   const [formData, setFormData] = useState<ProductInput>({
     name: editProduct?.name || '',
@@ -25,7 +26,6 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
   const [errors, setErrors] = useState<Partial<Record<keyof ProductInput, string>>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Lock body scroll when modal is open
   React.useEffect(() => {
     if (isOpen) {
       const originalStyle = window.getComputedStyle(document.body).overflow;
@@ -36,7 +36,6 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
     }
   }, [isOpen]);
 
-  // Reset form when editProduct changes or modal opens
   React.useEffect(() => {
     if (isOpen) {
       setFormData({
@@ -51,46 +50,25 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
 
   const validateForm = (): boolean => {
     const newErrors: Partial<Record<keyof ProductInput, string>> = {};
-
-    if (!formData.name.trim()) {
-      newErrors.name = 'Product name is required';
-    }
-
-    if (formData.quantity <= 0) {
-      newErrors.quantity = 'Quantity must be greater than 0';
-    }
-
-    if (formData.price <= 0) {
-      newErrors.price = 'Price must be greater than 0';
-    }
-
+    if (!formData.name.trim()) newErrors.name = 'Product name is required';
+    if (formData.quantity <= 0) newErrors.quantity = 'Quantity must be > 0';
+    if (formData.price <= 0) newErrors.price = 'Price must be > 0';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (isSubmitting) {
-      return;
-    }
-
-    if (!validateForm()) {
-      return;
-    }
+    if (isSubmitting || !validateForm()) return;
 
     setIsSubmitting(true);
-
     try {
       await onSubmit(formData);
-
-      // Reset form and close modal only after successful submission
       setFormData({ name: '', quantity: 1, price: 1, language: defaultLanguage });
       setErrors({});
       onClose();
     } catch (error) {
       console.error('Error submitting product:', error);
-      // Don't close modal on error - let user see the error and try again
       alert(`Failed to add product: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsSubmitting(false);
@@ -99,60 +77,58 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
 
   const handleSampleSelect = (sampleName: string) => {
     const samplePrices: Record<string, number> = {
-      'Tomato': 40,
-      'Onion': 35,
-      'Potato': 25,
-      'Banana': 60,
-      'Apple': 120
+      'Tomato': 40, 'Onion': 35, 'Potato': 25, 'Banana': 60, 'Apple': 120
     };
-
-    setFormData({
-      ...formData,
-      name: sampleName,
-      price: samplePrices[sampleName] || 30
-    });
+    setFormData({ ...formData, name: sampleName, price: samplePrices[sampleName] || 30 });
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4 animate-fade-in">
-      <div className="bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl max-w-md w-full max-h-[92vh] sm:max-h-[90vh] overflow-hidden flex flex-col animate-slide-up sm:animate-scale-in">
+    <div className="fixed inset-0 bg-text-primary/40 backdrop-blur-sm flex items-center justify-center z-[200] p-4 animate-fade-in font-sans">
+      <div className="bg-surface rounded-[2rem] shadow-2xl max-w-lg w-full max-h-[90vh] overflow-hidden flex flex-col animate-scale-in border border-border-light">
         {/* Header */}
-        <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white p-6 sm:rounded-t-2xl flex-shrink-0 relative">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold mb-1">
-                {editProduct ? '✏️ Edit Product' : '📦 Add Product'}
-              </h2>
-              <p className="text-emerald-100 text-sm">
-                {editProduct ? 'Update your product details' : 'List your product for sale'}
-              </p>
+        <div className="bg-primary text-text-inverse p-6 flex-shrink-0 relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-text-inverse/5 rounded-full -mr-12 -mt-12 transition-transform group-hover:scale-150"></div>
+          <div className="flex items-center justify-between relative z-10">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-text-inverse/10 rounded-xl flex items-center justify-center backdrop-blur-md border border-text-inverse/20 group-hover:rotate-6 transition-transform">
+                {editProduct ? <Edit3 className="w-6 h-6" /> : <Package className="w-6 h-6" />}
+              </div>
+              <div className="font-display">
+                <h2 className="text-xl font-black tracking-tight uppercase">
+                  {editProduct ? 'Update Listing' : 'New Listing'}
+                </h2>
+                <p className="text-primary-100 text-[10px] font-bold uppercase tracking-widest mt-0.5">
+                  {editProduct ? 'Refine your product details' : 'Post your product to the mandi'}
+                </p>
+              </div>
             </div>
             <button
               onClick={onClose}
-              className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-xl flex items-center justify-center transition-all active:scale-90"
+              className="w-10 h-10 bg-text-inverse/10 hover:bg-text-inverse/20 rounded-lg flex items-center justify-center transition-all active:scale-90 border border-text-inverse/20"
             >
-              <span className="text-xl">✕</span>
+              <X className="w-5 h-5" />
             </button>
           </div>
-          {/* Decorative element */}
-          <div className="absolute -bottom-4 right-6 w-12 h-12 bg-white/10 rounded-full blur-xl"></div>
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6 overflow-y-auto flex-1 scrollbar-hide">
-          {/* Sample Products */}
-          <div>
-            <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">
-              Quick Suggestions
-            </label>
+          {/* Quick Suggestions */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 px-1">
+              <Zap className="w-3.5 h-3.5 text-secondary" />
+              <label className="text-[9px] font-black text-text-tertiary uppercase tracking-[0.2em]">
+                Quick Market Suggestions
+              </label>
+            </div>
             <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-1 px-1">
               {SAMPLE_PRODUCTS.map((sample) => (
                 <button
                   key={sample}
                   type="button"
                   onClick={() => handleSampleSelect(sample)}
-                  className="flex-shrink-0 px-4 py-2 text-sm bg-gray-50 hover:bg-emerald-50 text-gray-600 hover:text-emerald-700 rounded-xl transition-all border border-gray-100 hover:border-emerald-200 font-medium active:scale-95"
+                  className="flex-shrink-0 px-4 py-2 text-[10px] bg-background-secondary hover:bg-primary-50 text-text-primary hover:text-primary rounded-lg transition-all border border-border-light hover:border-primary-200 font-black uppercase tracking-wider active:scale-95 shadow-sm"
                 >
                   {sample}
                 </button>
@@ -162,73 +138,82 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
 
           <div className="space-y-4">
             {/* Product Name */}
-            <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2">
+            <div className="space-y-1.5">
+              <label className="px-1 text-[10px] font-black text-text-secondary uppercase tracking-widest">
                 Product Name
               </label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className={`w-full px-4 py-3.5 bg-gray-50 border-2 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:bg-white transition-all outline-none ${errors.name ? 'border-red-200 bg-red-50' : 'border-gray-50 focus:border-emerald-500'
-                  }`}
-                placeholder="e.g., Fresh Tomatoes"
-              />
-              {errors.name && <p className="text-red-500 text-xs mt-1.5 font-medium ml-1">{errors.name}</p>}
+              <div className="relative group">
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className={`w-full px-6 py-5 bg-background-secondary border-2 rounded-2xl focus:ring-4 focus:ring-primary/10 transition-all outline-none font-bold text-lg ${errors.name ? 'border-error-light/30 bg-error-light/5' : 'border-transparent focus:border-primary-100 focus:bg-surface'
+                    }`}
+                  placeholder="e.g., Organic Red Tomatoes"
+                />
+                {errors.name && <p className="text-error text-[10px] font-black uppercase mt-1.5 ml-1 tracking-wider">{errors.name}</p>}
+              </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-6">
               {/* Quantity */}
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">
+              <div className="space-y-2">
+                <label className="px-1 text-[11px] font-black text-text-secondary uppercase tracking-widest">
                   Quantity (kg)
                 </label>
                 <input
                   type="number"
                   value={formData.quantity}
                   onChange={(e) => setFormData({ ...formData, quantity: Number(e.target.value) })}
-                  className={`w-full px-4 py-3.5 bg-gray-50 border-2 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:bg-white transition-all outline-none ${errors.quantity ? 'border-red-200 bg-red-50' : 'border-gray-50 focus:border-emerald-500'
+                  className={`w-full px-6 py-5 bg-background-secondary border-2 rounded-2xl focus:ring-4 focus:ring-primary/10 transition-all outline-none font-bold text-lg ${errors.quantity ? 'border-error-light/30 bg-error-light/5' : 'border-transparent focus:border-primary-100 focus:bg-surface'
                     }`}
                   min="0.1"
                   step="0.1"
                 />
-                {errors.quantity && <p className="text-red-500 text-xs mt-1.5 font-medium ml-1">{errors.quantity}</p>}
+                {errors.quantity && <p className="text-error text-[10px] font-black uppercase mt-1.5 ml-1 tracking-wider">{errors.quantity}</p>}
               </div>
 
               {/* Price */}
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">
+              <div className="space-y-2">
+                <label className="px-1 text-[11px] font-black text-text-secondary uppercase tracking-widest">
                   Price / kg (₹)
                 </label>
-                <input
-                  type="number"
-                  value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
-                  className={`w-full px-4 py-3.5 bg-gray-50 border-2 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:bg-white transition-all outline-none ${errors.price ? 'border-red-200 bg-red-50' : 'border-gray-50 focus:border-emerald-500'
-                    }`}
-                  min="0.1"
-                  step="0.1"
-                />
-                {errors.price && <p className="text-red-500 text-xs mt-1.5 font-medium ml-1">{errors.price}</p>}
+                <div className="relative group">
+                  <span className="absolute left-6 top-1/2 -translate-y-1/2 font-black text-text-tertiary">₹</span>
+                  <input
+                    type="number"
+                    value={formData.price}
+                    onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}
+                    className={`w-full px-6 py-5 pl-10 bg-background-secondary border-2 rounded-2xl focus:ring-4 focus:ring-primary/10 transition-all outline-none font-bold text-lg ${errors.price ? 'border-error-light/30 bg-error-light/5' : 'border-transparent focus:border-primary-100 focus:bg-surface'
+                      }`}
+                    min="0.1"
+                    step="0.1"
+                  />
+                </div>
+                {errors.price && <p className="text-error text-[10px] font-black uppercase mt-1.5 ml-1 tracking-wider">{errors.price}</p>}
               </div>
             </div>
 
-            <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-100 flex items-center justify-between">
-              <span className="text-emerald-700 font-medium text-sm">Total Value</span>
-              <span className="text-emerald-700 font-bold text-lg">₹{(formData.price * formData.quantity).toLocaleString()}</span>
+            <div className="bg-primary/5 p-6 rounded-2xl border border-primary-100 flex items-center justify-between group transition-all hover:bg-primary-50">
+              <div className="flex items-center gap-3">
+                <IndianRupee className="w-5 h-5 text-primary" />
+                <span className="text-primary-dark font-black text-xs uppercase tracking-[0.2em]">Total Market Value</span>
+              </div>
+              <span className="text-primary-dark font-black text-2xl font-display">₹{(formData.price * formData.quantity).toLocaleString()}</span>
             </div>
           </div>
 
           {/* Language */}
-          <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2">
+          <div className="space-y-2">
+            <label className="px-1 text-[11px] font-black text-text-secondary uppercase tracking-widest">
               Selling Language
             </label>
-            <div className="relative">
+            <div className="relative group">
+              <Globe className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-text-tertiary" />
               <select
                 value={formData.language}
                 onChange={(e) => setFormData({ ...formData, language: e.target.value })}
-                className="w-full px-4 py-3.5 bg-gray-50 border-2 border-gray-50 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 focus:bg-white transition-all outline-none appearance-none font-medium text-gray-700"
+                className="w-full px-6 py-5 pl-16 bg-background-secondary border-2 border-transparent focus:border-primary-100 rounded-2xl focus:ring-4 focus:ring-primary/10 focus:bg-surface transition-all outline-none appearance-none font-bold text-lg text-text-primary"
               >
                 {SUPPORTED_LANGUAGES.map((lang) => (
                   <option key={lang.code} value={lang.code}>
@@ -236,21 +221,19 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                   </option>
                 ))}
               </select>
-              <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
+              <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-text-tertiary group-hover:translate-y-[-40%] transition-transform">
+                <ChevronDown className="w-6 h-6" />
               </div>
             </div>
           </div>
         </form>
 
         {/* Action Buttons */}
-        <div className="p-6 border-t border-gray-50 bg-white sm:rounded-b-2xl flex gap-3 flex-shrink-0">
+        <div className="p-6 border-t border-border-light bg-surface flex gap-3 flex-shrink-0 relative z-20">
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 px-6 py-4 bg-gray-50 text-gray-600 font-bold rounded-xl hover:bg-gray-100 transition-all border border-gray-100 active:scale-95"
+            className="flex-1 px-6 py-4 bg-background-secondary text-text-secondary font-black rounded-xl hover:bg-surface-secondary transition-all border border-border-light active:scale-95 uppercase tracking-widest text-[10px]"
           >
             Cancel
           </button>
@@ -258,18 +241,19 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
             type="button"
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className={`flex-[2] px-6 py-4 ${isSubmitting
-              ? 'bg-gray-300 cursor-not-allowed shadow-none'
-              : 'bg-emerald-500 hover:bg-emerald-600 shadow-lg shadow-emerald-100 active:scale-95'
-              } text-white font-bold rounded-xl transition-all duration-200 transform`}
+            className={`flex-[2] px-6 py-4 relative overflow-hidden group/submit ${isSubmitting
+              ? 'bg-text-tertiary cursor-not-allowed shadow-none'
+              : 'bg-primary hover:bg-primary-dark shadow-lg shadow-primary/10 active:scale-95'
+              } text-text-inverse font-black rounded-xl transition-all duration-300 transform uppercase tracking-[0.2em] text-[10px]`}
           >
+            <div className="absolute inset-0 bg-text-inverse/10 translate-y-full group-hover/submit:translate-y-0 transition-transform duration-300"></div>
             {isSubmitting ? (
-              <span className="flex items-center justify-center space-x-2">
-                <div className="w-5 h-5 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
-                <span>Adding...</span>
+              <span className="flex items-center justify-center space-x-2 relative z-10">
+                <div className="w-4 h-4 border-2 border-text-inverse border-t-transparent rounded-full animate-spin"></div>
+                <span>Processing...</span>
               </span>
             ) : (
-              editProduct ? 'Update Product' : 'Add Product'
+              <span className="relative z-10">{editProduct ? 'Update Listing' : 'Confirm Listing'}</span>
             )}
           </button>
         </div>

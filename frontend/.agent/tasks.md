@@ -1,0 +1,28 @@
+# Tasks: UI Refinement
+
+- [ ] **Task 0: Design System Hookup** 
+    - [x] Verify `globals.css` variables.
+    - [x] Update `tailwind.config.js` to use variables.
+- [ ] **Task 1: Navbar Refinement**
+    - [x] Replace hardcoded colors with variable-based Tailwind classes.
+    - [x] Switch to Lucide icons.
+    - [x] Apply 'Outfit' heading font.
+- [ ] **Task 2: Dashboard Overhaul**
+    - [x] Refactor Hero section with primary/secondary variables.
+    - [x] Update Stats cards with shadow-xl and variable colors.
+    - [x] Fix storage indicator styling.
+- [ ] **Task 3: ProductCard Variable Alignment**
+    - [ ] Replace `from-emerald-600` type classes with variable equivalents.
+    - [ ] Update card shadows and border radii to use `shadow-md`/`radius-2xl`.
+- [ ] **Task 4: Landing Page (index.tsx)**
+    - [ ] Refactor Hero gradient to use `--color-primary`.
+    - [ ] Update features grid with variable-based cards.
+- [ ] **Task 5: Buyer Marketplace (buyer.tsx)**
+    - [ ] Refine search bar (glassmorphism via variables).
+    - [ ] Update product grid layout.
+- [ ] **Task 6: Modals & Chat**
+    - [ ] Update `NegotiationChat.tsx` styling (header/footer).
+    - [ ] Ensure `AddProductModal.tsx` follows the same theme.
+- [ ] **Task 7: Final Polish & Linting**
+    - [ ] Run `npm run lint`.
+    - [ ] Fix any remaining `@tailwind` / `@apply` warnings if possible.

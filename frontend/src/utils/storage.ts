@@ -78,6 +78,7 @@ export class StorageManager {
       }
       
       localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
+      this.notifyListeners();
       return true;
     } catch (error) {
       if (error instanceof DOMException && error.code === 22) {
@@ -314,6 +315,12 @@ export class StorageManager {
     } catch (err) {
       console.error('Error calculating storage info:', err);
       return { used: 0, available: 0, total: 0 };
+    }
+  }
+  // Event listener mechanism for reacting to changes within the same tab/window
+  private notifyListeners() {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('local-storage'));
     }
   }
 }

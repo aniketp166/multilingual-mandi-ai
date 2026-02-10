@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Search, ShoppingBag, Globe, MessageSquare, Package, IndianRupee, Languages, Sparkles } from 'lucide-react';
 import { Product, ChatSession, Message } from '../src/types';
 import { storage } from '../src/utils/storage';
 import Layout from '../src/components/Layout';
@@ -10,6 +11,7 @@ export default function BuyerPage() {
   const [activeChatSession, setActiveChatSession] = useState<ChatSession | null>(null);
   const [buyerLanguage, setBuyerLanguage] = useState('en');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isSending, setIsSending] = useState(false);
 
   const getLanguageName = (code: string) => {
     const languages: Record<string, string> = {
@@ -28,7 +30,6 @@ export default function BuyerPage() {
   useEffect(() => {
     loadProducts();
 
-    // Sync with other tabs
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'multilingual-mandi-data') {
         loadProducts();
@@ -37,7 +38,6 @@ export default function BuyerPage() {
 
     window.addEventListener('storage', handleStorageChange);
 
-    // Background poll for active chat updates
     const pollInterval = setInterval(() => {
       if (activeChatSession) {
         const allSessions = storage.getChatSessions();
@@ -62,18 +62,14 @@ export default function BuyerPage() {
 
   const handleStartChat = (product: Product) => {
     setSelectedProduct(product);
-
-    // Check if there's an existing chat session for this product - always get fresh from storage
     const existingSessions = storage.getChatSessions();
     const existingSession = existingSessions.find(
       session => session.product_id === product.id && session.status === 'active'
     );
 
     if (existingSession) {
-      // Use the fresh session from storage
       setActiveChatSession(existingSession);
     } else {
-      // Create new chat session
       const newSession = storage.addChatSession({
         product_id: product.id,
         vendor_id: 'vendor_1',
@@ -86,8 +82,6 @@ export default function BuyerPage() {
       setActiveChatSession(newSession);
     }
   };
-
-  const [isSending, setIsSending] = useState(false);
 
   const handleSendMessage = async (messageText: string) => {
     if (!activeChatSession || !selectedProduct) return;
@@ -140,13 +134,10 @@ export default function BuyerPage() {
 
   const handleClearChatMessages = () => {
     if (!activeChatSession) return;
-
     const updatedSession = storage.updateChatSession(activeChatSession.id, {
       messages: []
     });
-
     if (updatedSession) {
-      // Close the chat since it has no messages
       setActiveChatSession(null);
       setSelectedProduct(null);
     }
@@ -157,149 +148,162 @@ export default function BuyerPage() {
   );
 
   return (
-    <Layout>
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-orange-50">
+    <Layout title="Browse Marketplace - Multilingual Mandi" description="Discover fresh products in your local language">
+      <div className="min-h-screen bg-background-secondary font-sans selection:bg-primary-100 selection:text-primary-dark">
         {/* Hero Section */}
-        <div className="bg-gradient-to-br from-emerald-600 via-emerald-700 to-orange-500 text-white relative overflow-hidden">
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute inset-0" style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-            }}></div>
-          </div>
+        <div className="bg-primary-dark text-text-inverse relative overflow-hidden font-display">
+          {/* Decorative Elements */}
+          <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-primary/20 to-transparent pointer-events-none"></div>
+          <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-secondary-light/10 rounded-full blur-3xl"></div>
 
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 relative">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
-              <div className="flex-1">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center flex-shrink-0">
-                    <span className="text-3xl sm:text-4xl">🛒</span>
+          <div className="max-w-7xl mx-auto px-6 py-6 lg:py-8 relative">
+            <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-12">
+              <div className="flex-1 space-y-8 animate-fade-in">
+                <div className="space-y-4">
+                  <div className="inline-flex items-center gap-2 bg-text-inverse/10 backdrop-blur-md px-4 py-2 rounded-2xl border border-text-inverse/10 shadow-xl">
+                    <ShoppingBag className="w-5 h-5 text-primary-200" />
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary-100">Live Marketplace</span>
                   </div>
-                  <div className="flex-1">
-                    <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold leading-tight">
-                      Browse Products
-                    </h1>
-                    <p className="text-white/80 text-sm sm:text-base font-medium mt-1">
-                      Find fresh products from local vendors
-                    </p>
-                  </div>
+                  <h1 className="text-4xl sm:text-5xl lg:text-7xl font-black tracking-tight leading-[0.9]">
+                    Find Fresh <span className="text-primary-200">Produce</span>
+                  </h1>
+                  <p className="text-text-inverse/80 text-lg max-w-2xl font-medium leading-relaxed italic">
+                    Discover products from local vendors and negotiate in your heart&apos;s language.
+                  </p>
                 </div>
-                <p className="text-white/90 text-base sm:text-lg leading-relaxed max-w-2xl">
-                  Connect with local vendors and negotiate in your preferred language.
-                  <span className="block mt-2 text-white/70 text-sm sm:text-base">
-                    🇮🇳 Breaking language barriers in local markets
-                  </span>
-                </p>
               </div>
 
-              {/* Language Selector */}
-              <div className="flex flex-col gap-3 lg:flex-shrink-0 lg:w-80">
-                <div className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
-                  <span className="text-white/90 font-semibold text-sm whitespace-nowrap">Your Language:</span>
-                  <select
-                    value={buyerLanguage}
-                    onChange={(e) => setBuyerLanguage(e.target.value)}
-                    className="flex-1 px-4 py-2 bg-white/20 backdrop-blur-sm text-white border border-white/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-white/50 font-medium"
-                  >
-                    <option value="en" className="text-gray-900">English</option>
-                    <option value="hi" className="text-gray-900">हिंदी (Hindi)</option>
-                    <option value="ta" className="text-gray-900">தமிழ் (Tamil)</option>
-                    <option value="te" className="text-gray-900">తెలుగు (Telugu)</option>
-                    <option value="bn" className="text-gray-900">বাংলা (Bengali)</option>
-                    <option value="mr" className="text-gray-900">मराठी (Marathi)</option>
-                    <option value="gu" className="text-gray-900">ગુજરાતી (Gujarati)</option>
-                    <option value="kn" className="text-gray-900">ಕನ್ನಡ (Kannada)</option>
-                  </select>
+              {/* Language Selector Enhanced */}
+              <div className="flex flex-col gap-4 animate-slide-up">
+                <div className="relative group">
+                  <div className="absolute inset-0 bg-text-inverse/5 rounded-2xl blur-xl group-hover:bg-text-inverse/10 transition-colors"></div>
+                  <div className="relative flex items-center gap-4 bg-text-inverse/10 backdrop-blur-xl rounded-2xl p-2 pl-5 border border-text-inverse/20 shadow-2xl">
+                    <div className="flex items-center gap-3">
+                      <Globe className="w-5 h-5 text-primary-200" />
+                      <span className="text-xs font-black uppercase tracking-widest text-text-inverse/70">Your Language</span>
+                    </div>
+                    <select
+                      value={buyerLanguage}
+                      onChange={(e) => setBuyerLanguage(e.target.value)}
+                      className="appearance-none bg-text-inverse text-primary-dark px-6 py-2.5 rounded-xl font-bold text-sm focus:outline-none focus:ring-4 focus:ring-primary/20 cursor-pointer shadow-lg outline-none"
+                    >
+                      <option value="en">English</option>
+                      <option value="hi">हिंदी (Hindi)</option>
+                      <option value="ta">தமிழ் (Tamil)</option>
+                      <option value="te">తెలుగు (Telugu)</option>
+                      <option value="bn">বাংলা (Bengali)</option>
+                      <option value="mr">मराठी (Marathi)</option>
+                      <option value="gu">ગુજરાતી (Gujarati)</option>
+                      <option value="kn">ಕನ್ನಡ (Kannada)</option>
+                    </select>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-          {/* Search Bar */}
-          <div className="mb-8">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search products..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-6 py-4 pl-12 bg-white border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent shadow-sm text-base"
-              />
-              <svg className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
+        <div className="max-w-7xl mx-auto px-6 py-12 sm:py-16">
+          {/* Enhanced Search Bar */}
+          <div className="mb-16 animate-fade-in">
+            <div className="relative group max-w-2xl">
+              <div className="absolute inset-0 bg-primary/5 rounded-[2rem] blur-2xl opacity-0 group-focus-within:opacity-100 transition-opacity"></div>
+              <div className="relative">
+                <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-text-tertiary group-focus-within:text-primary transition-colors" />
+                <input
+                  type="text"
+                  placeholder="What are you looking for today?"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full px-8 py-6 pl-16 bg-surface border border-border-light rounded-[2rem] focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary shadow-xl shadow-gray-200/50 text-lg font-medium transition-all"
+                />
+              </div>
             </div>
           </div>
 
           {/* Products Grid */}
           {filteredProducts.length === 0 ? (
-            <div className="text-center py-16 sm:py-24">
-              <div className="max-w-lg mx-auto">
-                <div className="w-24 h-24 sm:w-32 sm:h-32 bg-gradient-to-br from-emerald-100 via-emerald-200 to-emerald-300 rounded-full flex items-center justify-center mx-auto mb-8 shadow-2xl">
-                  <span className="text-5xl sm:text-6xl">🛒</span>
+            <div className="text-center py-24 sm:py-32">
+              <div className="max-w-xl mx-auto space-y-8">
+                <div className="relative inline-block">
+                  <div className="w-32 h-32 bg-primary-50 rounded-[2.5rem] flex items-center justify-center mx-auto shadow-2xl scale-110">
+                    <Search className="w-16 h-16 text-primary" />
+                  </div>
                 </div>
-                <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">
-                  No products found
-                </h3>
-                <p className="text-gray-600 leading-relaxed text-base sm:text-lg px-4">
-                  {searchQuery ? `No products match "${searchQuery}". Try a different search term.` : 'No products available at the moment. Check back later!'}
-                  <span className="block mt-2 text-emerald-600 font-semibold">
-                    🌟 New products added daily
-                  </span>
-                </p>
+                <div className="space-y-4">
+                  <h3 className="text-3xl font-black text-text-primary tracking-tight font-display">
+                    {searchQuery ? `No matches for "${searchQuery}"` : "The Mandi is Empty"}
+                  </h3>
+                  <p className="text-text-secondary text-lg leading-relaxed">
+                    Try adjusting your search or check back later. Products are added every minute!
+                  </p>
+                </div>
               </div>
             </div>
           ) : (
             <>
-              <div className="mb-6">
-                <p className="text-gray-600 text-sm">
-                  Showing <span className="font-semibold text-gray-900">{filteredProducts.length}</span> {filteredProducts.length === 1 ? 'product' : 'products'}
-                </p>
+              <div className="flex items-center justify-between mb-12 animate-fade-in">
+                <div className="space-y-1">
+                  <h2 className="text-3xl font-black text-text-primary font-display tracking-tight">Market Offerings</h2>
+                  <p className="text-text-secondary font-medium">Found {filteredProducts.length} fresh products available now</p>
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {filteredProducts.map((product) => (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10">
+                {filteredProducts.map((product, i) => (
                   <div
                     key={product.id}
-                    className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 group"
+                    className="group relative bg-surface rounded-[2.5rem] shadow-xl border border-border-light overflow-hidden hover:border-primary-200 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl animate-fade-in"
+                    style={{ animationDelay: `${i * 50}ms` }}
                   >
-                    {/* Product Header */}
-                    <div className="bg-gradient-to-br from-emerald-50 to-orange-50 p-6 border-b border-gray-100">
-                      <div className="flex justify-between items-start mb-3">
-                        <div className="flex-1">
-                          <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-emerald-600 transition-colors">
-                            {product.name}
-                          </h3>
-                          <div className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 bg-blue-100 text-blue-700 rounded-full font-semibold">
-                            <span>🗣️</span>
-                            <span>{getLanguageName(product.language)}</span>
-                          </div>
+                    {/* Visual Decor */}
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-700"></div>
+
+                    {/* Header */}
+                    <div className="p-8 pb-4">
+                      <div className="flex justify-between items-start mb-6">
+                        <div className="w-16 h-16 bg-primary-50 rounded-2xl flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform">
+                          <Package className="w-8 h-8 text-primary" />
+                        </div>
+                        <div className="px-3 py-1.5 bg-secondary-50 border border-secondary-100 rounded-full flex items-center gap-1.5 shadow-sm">
+                          <Languages className="w-3 h-3 text-secondary" />
+                          <span className="text-[10px] font-black text-secondary-dark uppercase tracking-widest">
+                            {getLanguageName(product.language)}
+                          </span>
                         </div>
                       </div>
+
+                      <h3 className="text-2xl font-black text-text-primary group-hover:text-primary transition-colors font-display truncate">
+                        {product.name}
+                      </h3>
                     </div>
 
-                    {/* Product Details */}
-                    <div className="p-6">
-                      <div className="flex items-baseline justify-between mb-4">
-                        <div>
-                          <p className="text-3xl font-bold text-emerald-600">
-                            ₹{product.price}
-                          </p>
-                          <p className="text-xs text-gray-500 mt-1">per kilogram</p>
+                    {/* Stats */}
+                    <div className="px-8 py-6 flex flex-col gap-4">
+                      <div className="flex items-end justify-between">
+                        <div className="space-y-1">
+                          <p className="text-[11px] font-black text-text-tertiary uppercase tracking-widest">Price / KG</p>
+                          <div className="flex items-baseline gap-1">
+                            <IndianRupee className="w-4 h-4 text-primary" />
+                            <p className="text-4xl font-black text-primary tracking-tighter">
+                              {product.price}
+                            </p>
+                          </div>
                         </div>
-                        <div className="text-right">
-                          <p className="text-lg font-semibold text-gray-900">{product.quantity} kg</p>
-                          <p className="text-xs text-gray-500">available</p>
+                        <div className="text-right space-y-1">
+                          <p className="text-[11px] font-black text-text-tertiary uppercase tracking-widest">Availability</p>
+                          <p className="text-xl font-black text-text-primary">{product.quantity} KG</p>
                         </div>
                       </div>
 
                       <button
                         onClick={() => handleStartChat(product)}
-                        className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-1 flex items-center justify-center gap-2"
+                        className="group/btn w-full mt-4 flex items-center justify-center gap-3 px-6 py-5 bg-primary text-text-inverse font-black rounded-2xl shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all duration-300 active:scale-95 relative overflow-hidden"
                       >
-                        <span className="text-lg">💬</span>
-                        <span>Contact Vendor</span>
+                        <div className="absolute inset-0 bg-text-inverse/10 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300"></div>
+                        <MessageSquare className="w-6 h-6 relative z-10 group-hover/btn:rotate-12 transition-transform" />
+                        <span className="relative z-10 uppercase tracking-[0.1em] text-sm">Negotiate Deal</span>
+                        <Sparkles className="w-4 h-4 text-secondary-light absolute top-2 right-4 animate-pulse" />
                       </button>
                     </div>
                   </div>

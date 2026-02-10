@@ -1,22 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { GoogleGenAI } from '@google/genai';
-
-interface PriceSuggestionRequest {
-  product_name: string;
-  quantity: number;
-  current_price?: number;
-  location?: string;
-  language?: string;
-}
-
-interface PriceSuggestionResponse {
-  min_price: number;
-  max_price: number;
-  recommended_price: number;
-  reasoning: string;
-  market_trend: 'rising' | 'falling' | 'stable';
-  confidence: number;
-}
+import { parseGeminiResponse } from '../../../src/utils/ai-helpers';
+import { PriceSuggestionRequest, PriceSuggestionResponse } from '../../../src/types';
 
 interface ApiResponse {
   data?: PriceSuggestionResponse;
@@ -140,33 +125,8 @@ Format:
       throw error;
     }
 
-    let responseText = '';
-    if (result?.candidates?.[0]?.content?.parts?.[0]?.text) {
-      responseText = result.candidates[0].content.parts[0].text;
-    } else if (typeof result?.text === 'string') {
-      responseText = result.text;
-    } else if (result?.text && typeof result.text === 'object') {
-      const textObj = result.text as Record<string, unknown>;
-      responseText = String(textObj.response || textObj.text || JSON.stringify(result.text));
-    } else {
-      responseText = String(result?.text || '');
-    }
-    
-    let jsonText = responseText.trim();
-    const jsonMatch = responseText.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
-    
-    if (jsonMatch && jsonMatch[1]) {
-      jsonText = jsonMatch[1].trim();
-    } else {
-      const objectMatch = responseText.match(/\{[\s\S]*\}/);
-      if (objectMatch) {
-        jsonText = objectMatch[0];
-      }
-    }
-    
     try {
-      const cleanJsonText = jsonText.replace(/[\u0000-\u001F\u007F-\u009F]/g, " ");
-      const parsedResponse = JSON.parse(cleanJsonText);
+      const parsedResponse = parseGeminiResponse<PriceSuggestionResponse>(result);
       
       const priceSuggestionResponse: PriceSuggestionResponse = {
         min_price: parsedResponse.min_price || 20,

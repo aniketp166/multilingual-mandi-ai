@@ -1,14 +1,20 @@
 import React, { useState, useEffect } from 'react';
+import { LayoutDashboard, Plus, Play, Package, IndianRupee, Scale, MessageSquare, Globe, AlertTriangle, Sparkles } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import Layout from '../src/components/Layout';
 import ProductCard from '../src/components/ProductCard';
-import AddProductModal from '../src/components/AddProductModal';
-import PriceSuggestionModal from '../src/components/PriceSuggestionModal';
-import NegotiationChat from '../src/components/NegotiationChat';
+
+const AddProductModal = dynamic(() => import('../src/components/AddProductModal'), { ssr: false });
+const PriceSuggestionModal = dynamic(() => import('../src/components/PriceSuggestionModal'), { ssr: false });
+const NegotiationChat = dynamic(() => import('../src/components/NegotiationChat'), { ssr: false });
 import { storage } from '../src/utils/storage';
 import { Product, ProductInput, ChatSession, Message } from '../src/types';
 import { config } from '../src/config';
 
+import { useTranslation } from 'react-i18next';
+
 const Dashboard: React.FC = () => {
+  const { i18n } = useTranslation();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -20,6 +26,7 @@ const Dashboard: React.FC = () => {
   const [activeChatSession, setActiveChatSession] = useState<ChatSession | null>(null);
   const [vendorLanguage, setVendorLanguage] = useState('en');
   const [isChatListModalOpen, setIsChatListModalOpen] = useState(false);
+  const [isSending, setIsSending] = useState(false);
 
   useEffect(() => {
     const loadData = () => {
@@ -51,64 +58,41 @@ const Dashboard: React.FC = () => {
 
     loadData();
 
+    // Listen for changes from other tabs
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'multilingual-mandi-data') {
         loadData();
       }
     };
 
+    // Listen for changes from the same tab (dispatched by storage utility)
+    const handleLocalStorageChange = () => {
+      loadData();
+    };
+
     window.addEventListener('storage', handleStorageChange);
-
-    const globalPoll = setInterval(() => {
-      const storedProducts = storage.getProducts();
-      const allSessions = storage.getChatSessions();
-
-      const activeSessions = allSessions
-        .filter(s => s.status === 'active' && s.messages.length > 0 && storedProducts.some(p => p.id === s.product_id))
-        .sort((a, b) => {
-          const timeA = new Date(a.messages[a.messages.length - 1]?.timestamp || 0).getTime();
-          const timeB = new Date(b.messages[b.messages.length - 1]?.timestamp || 0).getTime();
-          return timeB - timeA;
-        });
-
-      setChatSessions(prev => {
-        if (JSON.stringify(prev) !== JSON.stringify(activeSessions)) {
-          return activeSessions;
-        }
-        return prev;
-      });
-
-      if (activeChatSession) {
-        const updatedSession = allSessions.find(s => s.id === activeChatSession.id);
-        if (updatedSession && updatedSession.messages.length !== activeChatSession.messages.length) {
-          setActiveChatSession(updatedSession);
-        }
-      }
-    }, 2000);
+    window.addEventListener('local-storage', handleLocalStorageChange);
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
-      clearInterval(globalPoll);
+      window.removeEventListener('local-storage', handleLocalStorageChange);
     };
-  }, [activeChatSession]);
+  }, []); // Only run on mount
 
-  // Poll for new chat sessions even when no chat is active
   useEffect(() => {
     const pollInterval = setInterval(() => {
       const allSessions = storage.getChatSessions();
       const activeSessions = allSessions.filter(s => s.status === 'active' && s.messages.length > 0);
 
-      // Check if there are new messages in any session
       const hasUpdates = activeSessions.some(newSession => {
         const oldSession = chatSessions.find(s => s.id === newSession.id);
         return !oldSession || oldSession.messages.length !== newSession.messages.length;
       });
 
       if (hasUpdates || activeSessions.length !== chatSessions.length) {
-        console.log('🔄 Chat sessions list updated');
         setChatSessions(activeSessions);
       }
-    }, 3000); // Poll every 3 seconds
+    }, 3000);
 
     return () => clearInterval(pollInterval);
   }, [chatSessions]);
@@ -116,14 +100,12 @@ const Dashboard: React.FC = () => {
   const handleLanguageChange = (newLanguage: string) => {
     setVendorLanguage(newLanguage);
     storage.updateUserPreferences({ language: newLanguage });
+    i18n.changeLanguage(newLanguage);
   };
 
   const handleAddProduct = async (productInput: ProductInput) => {
-    if (isAddingProduct) {
-      return;
-    }
+    if (isAddingProduct) return;
 
-    // If editing, update the product
     if (editingProduct) {
       try {
         const updatedProduct = {
@@ -148,7 +130,6 @@ const Dashboard: React.FC = () => {
       return;
     }
 
-    // Otherwise, add new product
     const existingProduct = products.find(p =>
       p.name.toLowerCase().trim() === productInput.name.toLowerCase().trim()
     );
@@ -167,11 +148,10 @@ const Dashboard: React.FC = () => {
       });
 
       setProducts(prev => [...prev, newProduct]);
-
     } catch (error) {
       console.error('Error adding product:', error);
       alert(`Failed to add product: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      throw error; // Re-throw so modal knows there was an error
+      throw error;
     } finally {
       setTimeout(() => {
         setIsAddingProduct(false);
@@ -203,16 +183,12 @@ const Dashboard: React.FC = () => {
       const success = storage.deleteProduct(productId);
       if (success) {
         setProducts(prev => prev.filter(p => p.id !== productId));
-
-        // Also archive associated chats
         const allSessions = storage.getChatSessions();
         allSessions.forEach(session => {
           if (session.product_id === productId) {
             storage.updateChatSession(session.id, { status: 'archived' });
           }
         });
-
-        // Immediate UI update for chats
         setChatSessions(prev => prev.filter(s => s.product_id !== productId));
       }
     }
@@ -244,16 +220,12 @@ const Dashboard: React.FC = () => {
   const handleOpenChat = (session: ChatSession) => {
     const product = products.find(p => p.id === session.product_id);
     if (product) {
-      // Refresh the session from storage to get latest messages
       const allSessions = storage.getChatSessions();
       const latestSession = allSessions.find(s => s.id === session.id);
-
       setSelectedProduct(product);
       setActiveChatSession(latestSession || session);
     }
   };
-
-  const [isSending, setIsSending] = useState(false);
 
   const handleSendMessage = async (messageText: string) => {
     if (!activeChatSession || !selectedProduct) return;
@@ -320,15 +292,11 @@ const Dashboard: React.FC = () => {
 
   const handleClearChatMessages = () => {
     if (!activeChatSession) return;
-
     const updatedSession = storage.updateChatSession(activeChatSession.id, {
       messages: []
     });
-
     if (updatedSession) {
-      // Remove from active chats list since it has no messages
       setChatSessions(prev => prev.filter(s => s.id !== updatedSession.id));
-      // Close the chat
       setActiveChatSession(null);
       setSelectedProduct(null);
     }
@@ -339,12 +307,12 @@ const Dashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <Layout title="Dashboard - Multilingual Mandi" description="Manage your products and get AI-powered insights">
+      <Layout title="Dashboard - Multilingual Mandi">
         <div className="max-w-7xl mx-auto px-6 py-16">
           <div className="flex items-center justify-center min-h-64">
             <div className="text-center">
-              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mb-4"></div>
-              <p className="text-gray-600 font-medium">Loading your dashboard...</p>
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
+              <p className="text-text-secondary font-medium">Loading your dashboard...</p>
             </div>
           </div>
         </div>
@@ -354,145 +322,95 @@ const Dashboard: React.FC = () => {
 
   return (
     <Layout title="Vendor Dashboard - Multilingual Mandi" description="Manage your products and get AI-powered insights">
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-background-secondary font-sans selection:bg-primary-100 selection:text-primary-dark">
         {/* Hero Section */}
-        <div className="bg-gradient-to-br from-emerald-600 via-emerald-700 to-orange-500 text-white relative overflow-hidden">
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute inset-0" style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-            }}></div>
-          </div>
+        <div className="bg-primary-dark text-text-inverse relative overflow-hidden font-display">
+          {/* Decorative Elements */}
+          <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-primary/20 to-transparent pointer-events-none"></div>
+          <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-saffron/10 rounded-full blur-3xl"></div>
 
-          <div className="max-w-7xl mx-auto px-6 py-12 sm:py-16 relative">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
-              <div className="flex-1">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center flex-shrink-0">
-                    <span className="text-3xl sm:text-4xl">🛒</span>
+          <div className="max-w-7xl mx-auto px-6 py-14 relative">
+            <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-6">
+              <div className="flex-1 space-y-4 animate-fade-in">
+                <div className="space-y-2">
+                  <div className="inline-flex items-center gap-2 bg-text-inverse/10 backdrop-blur-md px-3 py-1 rounded-xl border border-text-inverse/10 shadow-lg">
+                    <LayoutDashboard className="w-3.5 h-3.5 text-primary-200" />
+                    <span className="text-[9px] font-black uppercase tracking-[0.2em] text-primary-100">Vendor Command Center</span>
                   </div>
-                  <div className="flex-1">
-                    <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold leading-tight">
-                      Welcome to Your Dashboard
-                    </h1>
-                    <p className="text-white/80 text-sm sm:text-base font-medium mt-1">
-                      मल्टीलिंगुअल मंडी • Multilingual Mandi
-                    </p>
-                  </div>
+                  <h1 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tight leading-none">
+                    Market <span className="text-primary-200">Overview</span>
+                  </h1>
                 </div>
-                <p className="text-white/90 text-base sm:text-lg leading-relaxed max-w-2xl mb-4">
-                  Manage your products, get AI-powered pricing insights, and communicate with buyers across language barriers.
-                  <span className="block mt-2 text-white/70 text-sm sm:text-base">
-                    🇮🇳 Empowering local markets with cutting-edge technology
-                  </span>
-                </p>
 
-                {/* Language Selector */}
-                <div className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-xl p-4 max-w-md">
-                  <span className="text-white/90 font-semibold text-sm">Your Language:</span>
-                  <select
-                    value={vendorLanguage}
-                    onChange={(e) => handleLanguageChange(e.target.value)}
-                    className="flex-1 px-4 py-2 bg-white/20 backdrop-blur-sm text-white border border-white/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-white/50 font-medium"
-                  >
-                    <option value="en" className="text-gray-900">English</option>
-                    <option value="hi" className="text-gray-900">हिंदी (Hindi)</option>
-                    <option value="ta" className="text-gray-900">தமிழ் (Tamil)</option>
-                    <option value="te" className="text-gray-900">తెలుగు (Telugu)</option>
-                    <option value="bn" className="text-gray-900">বাংলা (Bengali)</option>
-                    <option value="mr" className="text-gray-900">मराठी (Marathi)</option>
-                    <option value="gu" className="text-gray-900">ગુજરાતી (Gujarati)</option>
-                    <option value="kn" className="text-gray-900">ಕನ್ನಡ (Kannada)</option>
-                  </select>
+                <div className="flex flex-wrap items-center gap-4">
+                  <div className="flex items-center gap-3 bg-text-inverse/10 backdrop-blur-md px-4 py-2.5 rounded-xl border border-text-inverse/20 shadow-lg">
+                    <Globe className="w-4 h-4 text-primary-200" />
+                    <span className="text-[10px] font-black uppercase tracking-widest text-text-inverse/80">Market Language</span>
+                    <select
+                      value={vendorLanguage}
+                      onChange={(e) => handleLanguageChange(e.target.value)}
+                      className="bg-transparent text-text-inverse font-black text-xs focus:outline-none cursor-pointer outline-none"
+                    >
+                      <option value="en" className="bg-surface text-text-primary">English</option>
+                      <option value="hi" className="bg-surface text-text-primary">हिंदी (Hindi)</option>
+                      <option value="ta" className="bg-surface text-text-primary">தமிழ் (Tamil)</option>
+                      <option value="te" className="bg-surface text-text-primary">తెలుగు (Telugu)</option>
+                      <option value="bn" className="bg-surface text-text-primary">বাংলা (Bengali)</option>
+                      <option value="mr" className="bg-surface text-text-primary">मराठी (Marathi)</option>
+                      <option value="gu" className="bg-surface text-text-primary">ગુજરાતી (Gujarati)</option>
+                      <option value="kn" className="bg-surface text-text-primary">ಕನ್ನಡ (Kannada)</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 
-              <div className="flex flex-col gap-3 lg:flex-shrink-0 lg:w-64">
+              <div className="flex flex-col sm:flex-row gap-3 animate-slide-up">
                 <button
                   onClick={() => setIsAddModalOpen(true)}
-                  className="w-full px-6 py-4 bg-white text-emerald-700 font-bold rounded-xl shadow-lg hover:shadow-xl hover:bg-emerald-50 transition-all duration-200 transform hover:-translate-y-1"
+                  className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-4 bg-text-inverse text-primary-dark font-black rounded-xl shadow-lg hover:shadow-primary-dark/20 transition-all duration-300 hover:-translate-y-0.5 active:scale-95 text-xs uppercase tracking-widest"
                 >
-                  <span className="flex items-center justify-center gap-2">
-                    <span className="text-xl">➕</span>
-                    <span>Add Product</span>
-                  </span>
+                  <Plus className="w-4 h-4" />
+                  <span>ADD LISTING</span>
                 </button>
                 <button
                   onClick={addSampleProduct}
-                  className="w-full px-6 py-4 bg-white/20 backdrop-blur-sm text-white font-bold rounded-xl border-2 border-white/30 hover:bg-white/30 transition-all duration-200"
+                  className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-4 bg-primary/40 backdrop-blur-xl text-text-inverse font-black rounded-xl border border-text-inverse/10 hover:bg-primary/60 transition-all duration-300 active:scale-95 text-xs uppercase tracking-widest"
                 >
-                  <span className="flex items-center justify-center gap-2">
-                    <span className="text-xl">🎯</span>
-                    <span>Try Sample</span>
-                  </span>
+                  <Play className="w-4 h-4 fill-current" />
+                  <span>DEMO DATA</span>
                 </button>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Stats Cards */}
+        {/* Improved Stats Cards */}
         {products.length > 0 && (
-          <div className="max-w-7xl mx-auto px-6 -mt-8 sm:-mt-10 relative z-10">
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 sm:gap-6">
-              <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100 hover:shadow-2xl transition-shadow duration-200">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <p className="text-gray-500 text-xs font-semibold uppercase tracking-wide mb-2">Total Products</p>
-                    <p className="text-3xl sm:text-4xl font-bold text-gray-900">{products.length}</p>
-                    <p className="text-emerald-600 text-sm font-medium mt-1">Active listings</p>
+          <div className="max-w-7xl mx-auto px-6 -mt-4 relative z-20">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[
+                { label: 'Inventory', value: products.length, sub: 'Active Items', icon: Package, color: 'text-primary', bg: 'bg-primary-50' },
+                { label: 'Total Value', value: `₹${products.reduce((sum, p) => sum + (p.price * p.quantity), 0).toLocaleString()}`, sub: 'Estimated Worth', icon: IndianRupee, color: 'text-primary', bg: 'bg-primary-50' },
+                { label: 'Stock Level', value: `${products.reduce((sum, p) => sum + p.quantity, 0)}kg`, sub: 'Total Quantity', icon: Scale, color: 'text-info', bg: 'bg-info-light/10' },
+                { label: 'Active Chats', value: chatSessions.length, sub: 'Customer Queries', icon: MessageSquare, color: 'text-secondary', bg: 'bg-secondary-50', action: () => chatSessions.length > 0 && setIsChatListModalOpen(true) }
+              ].map((stat, i) => (
+                <div
+                  key={i}
+                  onClick={stat.action}
+                  className={`group bg-surface rounded-[1.5rem] p-6 shadow-lg border border-border-light hover:border-primary-200 transition-all duration-500 hover:-translate-y-1 ${stat.action ? 'cursor-pointer hover:shadow-primary-100/30' : 'cursor-default'}`}
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className={`p-3 ${stat.bg} rounded-xl group-hover:scale-105 transition-transform duration-500`}>
+                      <stat.icon className={`w-6 h-6 ${stat.color}`} />
+                    </div>
                   </div>
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-2xl flex items-center justify-center flex-shrink-0">
-                    <span className="text-2xl sm:text-3xl">📦</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100 hover:shadow-2xl transition-shadow duration-200">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <p className="text-gray-500 text-xs font-semibold uppercase tracking-wide mb-2">Total Value</p>
-                    <p className="text-3xl sm:text-4xl font-bold text-emerald-600">
-                      ₹{products.reduce((sum, p) => sum + (p.price * p.quantity), 0).toLocaleString()}
-                    </p>
-                    <p className="text-gray-600 text-sm font-medium mt-1">Inventory worth</p>
-                  </div>
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-2xl flex items-center justify-center flex-shrink-0">
-                    <span className="text-2xl sm:text-3xl">💰</span>
+                  <div>
+                    <h3 className="text-[10px] font-black text-text-tertiary uppercase tracking-[0.15em] mb-1">{stat.label}</h3>
+                    <p className={`text-2xl font-black ${stat.color} tracking-tight`}>{stat.value}</p>
+                    <p className="text-[10px] font-bold text-text-tertiary mt-0.5">{stat.sub}</p>
                   </div>
                 </div>
-              </div>
-
-              <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100 hover:shadow-2xl transition-shadow duration-200">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <p className="text-gray-500 text-xs font-semibold uppercase tracking-wide mb-2">Total Quantity</p>
-                    <p className="text-3xl sm:text-4xl font-bold text-blue-600">
-                      {products.reduce((sum, p) => sum + p.quantity, 0)} kg
-                    </p>
-                    <p className="text-gray-600 text-sm font-medium mt-1">Available stock</p>
-                  </div>
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl flex items-center justify-center flex-shrink-0">
-                    <span className="text-2xl sm:text-3xl">⚖️</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100 hover:shadow-2xl transition-shadow duration-200 cursor-pointer" onClick={() => chatSessions.length > 0 && setIsChatListModalOpen(true)}>
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <p className="text-gray-500 text-xs font-semibold uppercase tracking-wide mb-2">Active Chats</p>
-                    <p className="text-3xl sm:text-4xl font-bold text-orange-600">
-                      {chatSessions.length}
-                    </p>
-                    <p className="text-gray-600 text-sm font-medium mt-1">
-                      {chatSessions.length > 0 ? 'Click to select' : 'No messages'}
-                    </p>
-                  </div>
-                  <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-orange-100 to-orange-200 rounded-2xl flex items-center justify-center flex-shrink-0">
-                    <span className="text-2xl sm:text-3xl">💬</span>
-                  </div>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         )}
@@ -501,24 +419,24 @@ const Dashboard: React.FC = () => {
         <div className="max-w-7xl mx-auto px-6 py-12 sm:py-16">
           {/* Storage Usage Indicator */}
           {storageUsedPercent > 50 && (
-            <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-6 mb-8">
+            <div className="bg-warning-light/10 border border-warning-light/30 rounded-2xl p-6 mb-8 animate-fade-in">
               <div className="flex items-center justify-between flex-col sm:flex-row gap-4">
                 <div className="flex items-center gap-4 flex-1">
-                  <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <span className="text-2xl">⚠️</span>
+                  <div className="w-12 h-12 bg-warning-light/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <AlertTriangle className="w-6 h-6 text-warning" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-amber-800">
+                    <h3 className="text-lg font-bold text-warning-dark">
                       Storage Usage: {storageUsedPercent.toFixed(1)}%
                     </h3>
-                    <p className="text-sm text-amber-700">
+                    <p className="text-sm text-text-secondary">
                       {(storageInfo.used / 1024).toFixed(1)} KB used of {(storageInfo.total / 1024).toFixed(1)} KB
                     </p>
                   </div>
                 </div>
-                <div className="w-full sm:w-32 h-3 bg-amber-200 rounded-full overflow-hidden">
+                <div className="w-full sm:w-32 h-3 bg-surface rounded-full overflow-hidden border border-border-light">
                   <div
-                    className="h-full bg-gradient-to-r from-amber-400 to-orange-500 transition-all duration-500"
+                    className="h-full bg-warning transition-all duration-500"
                     style={{ width: `${Math.min(storageUsedPercent, 100)}%` }}
                   />
                 </div>
@@ -528,60 +446,55 @@ const Dashboard: React.FC = () => {
 
           {/* Products Grid */}
           {products.length === 0 ? (
-            <div className="text-center py-16 sm:py-24">
-              <div className="max-w-lg mx-auto">
-                <div className="w-24 h-24 sm:w-32 sm:h-32 bg-gradient-to-br from-emerald-100 via-emerald-200 to-emerald-300 rounded-full flex items-center justify-center mx-auto mb-8 shadow-2xl">
-                  <span className="text-5xl sm:text-6xl">📦</span>
+            <div className="text-center py-20 sm:py-32">
+              <div className="max-w-xl mx-auto space-y-8">
+                <div className="relative inline-block">
+                  <div className="w-32 h-32 sm:w-40 sm:h-40 bg-gradient-to-br from-primary-50 via-primary-100 to-primary-200 rounded-[2.5rem] flex items-center justify-center mx-auto shadow-2xl rotate-3 scale-110">
+                    <Package className="w-16 h-16 sm:w-20 sm:h-20 text-primary" />
+                  </div>
+                  <Sparkles className="absolute -top-4 -right-4 w-12 h-12 text-secondary animate-pulse" />
                 </div>
-                <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">
-                  Ready to start selling?
-                </h3>
-                <p className="text-gray-600 mb-10 leading-relaxed text-base sm:text-lg px-4">
-                  Create your first product listing and join thousands of vendors using AI-powered tools to grow their business.
-                  <span className="block mt-2 text-emerald-600 font-semibold">
-                    🚀 Get started in seconds!
-                  </span>
-                </p>
-                <div className="space-y-4 px-4">
+                <div className="space-y-4">
+                  <h3 className="text-3xl sm:text-4xl font-black text-text-primary tracking-tight font-display">
+                    Start Your Digital <span className="text-primary">Mandi</span>
+                  </h3>
+                  <p className="text-text-secondary text-lg leading-relaxed px-4">
+                    Join thousands of local vendors using AI to break language barriers and grow their business globally.
+                  </p>
+                </div>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-4 px-4">
                   <button
                     onClick={() => setIsAddModalOpen(true)}
-                    className="w-full sm:w-auto px-10 py-5 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-bold rounded-2xl shadow-2xl hover:shadow-3xl hover:from-emerald-600 hover:to-emerald-700 transition-all duration-300 transform hover:-translate-y-2 text-lg"
+                    className="w-full sm:w-auto px-10 py-5 bg-primary text-text-inverse font-black rounded-2xl shadow-xl hover:shadow-primary/30 transition-all duration-300 transform hover:-translate-y-2 text-lg active:scale-95"
                   >
-                    <span className="flex items-center justify-center gap-3">
-                      <span className="text-2xl">🚀</span>
-                      <span>Add Your First Product</span>
-                    </span>
+                    🚀 CREATE FIRST LISTING
                   </button>
-                  <p className="text-sm text-gray-500">
-                    Or try a <button onClick={addSampleProduct} className="text-emerald-600 hover:text-emerald-700 font-semibold underline decoration-2 underline-offset-2">sample product</button> to explore features
-                  </p>
+                  <button
+                    onClick={addSampleProduct}
+                    className="w-full sm:w-auto px-10 py-5 bg-surface text-text-secondary font-black rounded-2xl border border-border hover:bg-surface-secondary transition-all duration-300 text-lg active:scale-95"
+                  >
+                    EXPLORE DEMO
+                  </button>
                 </div>
               </div>
             </div>
           ) : (
             <>
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 gap-4">
-                <div>
-                  <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Your Products</h2>
-                  <p className="text-gray-600 text-base sm:text-lg">Manage your inventory and get AI insights</p>
+              <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-12 gap-6 animate-fade-in">
+                <div className="space-y-2">
+                  <h2 className="text-3xl sm:text-4xl font-black text-text-primary tracking-tight font-display">Your Inventory</h2>
+                  <p className="text-text-secondary text-lg">Manage listings and monitor AI-powered insights</p>
                 </div>
-                <div className="flex items-center justify-between sm:justify-end gap-4">
-                  <span className="text-sm text-gray-500 bg-gray-100 px-3 py-2 rounded-full font-medium">
-                    {products.length} products
-                  </span>
-                  <button
-                    onClick={() => setIsAddModalOpen(true)}
-                    className="hidden sm:flex px-4 py-2 sm:px-6 sm:py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-semibold rounded-lg sm:rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-1 items-center gap-2"
-                  >
-                    <span>➕</span>
-                    <span>Add Product</span>
-                  </button>
+                <div className="flex items-center gap-4">
+                  <div className="bg-surface px-4 py-2 rounded-xl border border-border-light shadow-sm">
+                    <span className="text-sm font-black text-primary uppercase tracking-wider">{products.length} Items</span>
+                  </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-                {products.map((product) => (
-                  <div key={product.id}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                {products.map((product, i) => (
+                  <div key={product.id} className="animate-fade-in" style={{ animationDelay: `${i * 50}ms` }}>
                     <ProductCard
                       product={product}
                       onDelete={() => handleDeleteProduct(product.id)}
@@ -594,47 +507,47 @@ const Dashboard: React.FC = () => {
             </>
           )}
 
-          {/* Development Tools */}
+          {/* Development Tools Enhanced */}
           {config.app.environment === 'development' && (
-            <div className="mt-16 bg-gray-100 rounded-xl p-6 border border-gray-200">
-              <h4 className="text-lg font-semibold mb-4 text-gray-800 flex items-center gap-2">
-                <span>🛠️</span>
-                <span>Development Tools</span>
+            <div className="mt-24 bg-surface rounded-[2rem] p-8 border border-border shadow-2xl relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 transition-transform duration-500 group-hover:scale-150"></div>
+              <h4 className="text-xl font-black mb-6 text-text-primary flex items-center gap-3 font-display">
+                <span className="bg-primary/10 p-2 rounded-lg">🛠️</span>
+                <span>Command Center (Dev)</span>
               </h4>
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap gap-4 relative z-10">
                 <button
                   onClick={() => setIsAddModalOpen(true)}
-                  className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm font-medium"
+                  className="px-6 py-3 bg-primary text-text-inverse rounded-xl hover:bg-primary-dark transition-all font-black text-sm active:scale-95 shadow-lg shadow-primary/20"
                 >
-                  Add Product
+                  ADD PRODUCT
                 </button>
                 <button
                   onClick={addSampleProduct}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                  className="px-6 py-3 bg-info text-text-inverse rounded-xl hover:bg-info-dark transition-all font-black text-sm active:scale-95 shadow-lg shadow-info/20"
                 >
-                  Add Sample
+                  INJECT SAMPLE
                 </button>
                 <button
                   onClick={() => {
                     const data = storage.exportData();
-                    console.log('Exported data:', data);
                     navigator.clipboard.writeText(data);
                     alert('Data exported to clipboard!');
                   }}
-                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium"
+                  className="px-6 py-3 bg-surface text-text-primary border border-border rounded-xl hover:bg-surface-secondary transition-all font-black text-sm active:scale-95"
                 >
-                  Export Data
+                  EXPORT JSON
                 </button>
                 <button
                   onClick={() => {
-                    if (confirm('Clear all data? This cannot be undone.')) {
+                    if (confirm('Wipe everything?')) {
                       storage.clearAllData();
                       setProducts([]);
                     }
                   }}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
+                  className="px-6 py-3 bg-error text-text-inverse rounded-xl hover:bg-error-dark transition-all font-black text-sm active:scale-95 shadow-lg shadow-error/20"
                 >
-                  Clear All Data
+                  PURGE DATA
                 </button>
               </div>
             </div>
@@ -644,10 +557,10 @@ const Dashboard: React.FC = () => {
         {/* Floating Action Button for Mobile */}
         <button
           onClick={() => setIsAddModalOpen(true)}
-          className="fixed bottom-6 right-6 w-16 h-16 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-full shadow-2xl hover:shadow-3xl hover:from-emerald-600 hover:to-emerald-700 transition-all duration-300 transform hover:scale-110 z-40 flex items-center justify-center lg:hidden"
+          className="fixed bottom-8 right-8 w-20 h-20 bg-primary text-text-inverse rounded-full shadow-2xl hover:shadow-primary-dark/40 transition-all duration-300 transform hover:scale-110 active:scale-90 z-40 flex items-center justify-center lg:hidden hover:rotate-90"
           aria-label="Add new product"
         >
-          <span className="text-2xl">➕</span>
+          <Plus className="w-10 h-10" />
         </button>
 
         <AddProductModal
@@ -673,39 +586,55 @@ const Dashboard: React.FC = () => {
           />
         )}
 
-        {/* Chat List Modal */}
+        {/* Chat List Modal Enhanced */}
         {isChatListModalOpen && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9998] p-4 animate-fade-in text-gray-950">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg flex flex-col max-h-[80vh] animate-scale-in">
-              <div className="p-6 border-b border-gray-100 flex justify-between items-center">
-                <h3 className="text-xl font-bold text-gray-900">Active Conversations</h3>
-                <button onClick={() => setIsChatListModalOpen(false)} className="text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+          <div className="fixed inset-0 bg-text-primary/60 backdrop-blur-md flex items-center justify-center z-[9998] p-4 animate-fade-in">
+            <div className="bg-surface rounded-[2.5rem] shadow-2xl w-full max-w-lg flex flex-col max-h-[85vh] animate-scale-in border border-text-inverse/10">
+              <div className="p-8 border-b border-border-light flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-secondary/10 rounded-xl flex items-center justify-center">
+                    <MessageSquare className="w-5 h-5 text-secondary" />
+                  </div>
+                  <h3 className="text-2xl font-black text-text-primary font-display">Active Chats</h3>
+                </div>
+                <button onClick={() => setIsChatListModalOpen(false)} className="text-text-tertiary hover:text-text-primary transition-colors text-3xl font-light">&times;</button>
               </div>
-              <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                {chatSessions.map(session => {
-                  const product = products.find(p => p.id === session.product_id);
-                  const lastMessage = session.messages[session.messages.length - 1];
-                  return (
-                    <div
-                      key={session.id}
-                      onClick={() => {
-                        handleOpenChat(session);
-                        setIsChatListModalOpen(false);
-                      }}
-                      className="p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-emerald-300 hover:bg-emerald-50 transition-all cursor-pointer group"
-                    >
-                      <div className="flex justify-between items-start mb-1">
-                        <span className="font-bold text-emerald-700">{product?.name || 'Unknown Product'}</span>
-                        <span className="text-[10px] text-gray-400">
-                          {new Date(lastMessage.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </span>
+              <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                {chatSessions.length === 0 ? (
+                  <div className="text-center py-12">
+                    <p className="text-text-tertiary">No active conversations found.</p>
+                  </div>
+                ) : (
+                  chatSessions.map(session => {
+                    const product = products.find(p => p.id === session.product_id);
+                    const lastMessage = session.messages[session.messages.length - 1];
+                    return (
+                      <div
+                        key={session.id}
+                        onClick={() => {
+                          handleOpenChat(session);
+                          setIsChatListModalOpen(false);
+                        }}
+                        className="p-5 bg-surface-secondary rounded-2xl border border-border-light hover:border-primary-300 hover:bg-primary-50 transition-all cursor-pointer group flex items-center gap-4"
+                      >
+                        <div className="w-12 h-12 bg-primary-100 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                          <Package className="w-6 h-6 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex justify-between items-center mb-1">
+                            <span className="font-black text-primary truncate pr-2">{product?.name || 'Deleted Product'}</span>
+                            <span className="text-[10px] font-black text-text-tertiary whitespace-nowrap">
+                              {new Date(lastMessage.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          </div>
+                          <p className="text-sm text-text-secondary line-clamp-1 italic group-hover:text-primary-dark">
+                            &quot;{lastMessage.text}&quot;
+                          </p>
+                        </div>
                       </div>
-                      <p className="text-sm text-gray-600 line-clamp-1 italic">
-                        &quot;{lastMessage.text}&quot;
-                      </p>
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                )}
               </div>
             </div>
           </div>
